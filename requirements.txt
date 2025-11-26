@@ -1,4 +1,11 @@
-Flask
-google-api-python-client
-google-auth-httplib2
-google-auth-oauthlib
+
+# Framework web
+Flask==2.2.5
+
+# Librerías para Gmail API
+google-api-python-client==2.149.0
+google-auth-httplib2==0.2.0
+google-auth-oauthlib==1.2.1
+
+# Fijar una versión compatible de MarkupSafe para este servidor
+MarkupSafe==2.0.1
