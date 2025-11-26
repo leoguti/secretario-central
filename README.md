@@ -1,3 +1,14 @@
+## Endpoint de prueba de Gmail
+
+Con la app corriendo:
+
+   python app.py
+
+Visita:
+
+   http://localhost:5001/gmail/test
+
+y verás un JSON con los últimos correos (id, subject, snippet) de la cuenta configurada.
 # Secretario Central
 
 Este proyecto es una aplicación mínima en Python usando Flask.
