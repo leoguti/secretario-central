@@ -143,6 +143,88 @@ RESUMEN DE INGESTA
 
 **Nota:** La primera vez que ejecutes este comando puede pedirte autorización en el navegador para acceder a Gmail.
 
+### Resúmenes automáticos con OpenAI
+
+El sistema puede generar resúmenes inteligentes de los eventos usando la API de OpenAI.
+
+**Requisito previo:**
+```bash
+export OPENAI_API_KEY='tu-api-key-aqui'
+```
+
+**Ejecutar generación de resumen:**
+```bash
+python -m central.resumen
+```
+
+**¿Qué hace este comando?**
+- Lee los eventos **nuevos desde el último resumen** generado
+- Si es la primera vez, toma las **últimas 12 horas** de eventos
+- Envía los eventos a OpenAI (modelo `gpt-4o-mini` económico)
+- Recibe un JSON estructurado con:
+  - Resumen general del periodo
+  - Eventos clave identificados
+  - Oportunidades de negocio detectadas
+  - Riesgos o problemas encontrados
+  - Pendientes sugeridos para Leonardo
+- Guarda el resumen en la tabla `resumenes` de SQLite
+- Muestra el resumen en consola
+
+**Ejemplo de salida:**
+```
+======================================================================
+GENERACIÓN DE RESUMEN AUTOMÁTICO
+======================================================================
+
+→ Rango de tiempo:
+  Desde: 2025-11-29T08:00:00Z
+  Hasta: 2025-11-29T14:30:00Z
+
+→ Eventos encontrados: 23
+
+→ Llamando a OpenAI para generar resumen...
+
+======================================================================
+RESUMEN GENERADO
+======================================================================
+
+📋 Resumen General:
+   En este periodo se recibieron múltiples comunicaciones relacionadas con
+   proyectos GTFS en México y Perú, actualizaciones de la asociación Trufi,
+   y oportunidades de colaboración con GIZ.
+
+🔑 Eventos Clave (3):
+   • Propuesta de GIZ para proyecto GTFS en Toluca con financiamiento confirmado
+   • Reunión de la junta directiva de Trufi programada para el 5 de diciembre
+   • Solicitud urgente de revisión de entregables del proyecto OMUS Arequipa
+
+💡 Oportunidades (2):
+   • Posible expansión del proyecto GTFS México a otras ciudades
+   • Colaboración con universidad local para capacitación en OpenStreetMap
+
+⚠️  Riesgos (1):
+   • Plazo ajustado para entregables de Arequipa (vence 30 nov)
+
+✅ Pendientes (4):
+   • Responder propuesta de GIZ antes del 2 de diciembre
+   • Preparar agenda para reunión Trufi del 5 de diciembre
+   • Revisar documentos del proyecto Arequipa antes del 30 de noviembre
+   • Coordinar con equipo OSM para taller en Boyacá
+
+======================================================================
+✓ Resumen guardado con ID: 1
+✓ Tipo: tarde
+✓ Estado: pendiente
+======================================================================
+```
+
+**Uso programático:**
+Puedes usar este comando en un cron para ejecutarlo automáticamente:
+```bash
+# Generar resumen a las 7:00 AM y 2:00 PM todos los días
+0 7,14 * * * cd /path/to/secretario && source .venv/bin/activate && python -m central.resumen
+```
+
 ## Endpoints disponibles
 
 ### API Principal

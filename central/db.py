@@ -70,6 +70,25 @@ def init_db():
 	cursor.execute('CREATE INDEX IF NOT EXISTS idx_eventos_proyecto_fecha ON eventos(proyecto, fecha_evento_utc)')
 	cursor.execute('CREATE INDEX IF NOT EXISTS idx_eventos_importancia_fecha ON eventos(importancia, fecha_evento_utc)')
 	
+	# Crear tabla resumenes
+	cursor.execute('''
+		CREATE TABLE IF NOT EXISTS resumenes (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			desde_utc TEXT NOT NULL,
+			hasta_utc TEXT NOT NULL,
+			generado_en_utc TEXT NOT NULL,
+			resumen_json TEXT NOT NULL,
+			tipo TEXT,
+			fuente_eventos TEXT,
+			estado_envio TEXT DEFAULT 'pendiente',
+			canales_enviados TEXT
+		)
+	''')
+	
+	# Crear índices para resumenes
+	cursor.execute('CREATE INDEX IF NOT EXISTS idx_resumenes_rango ON resumenes(desde_utc, hasta_utc)')
+	cursor.execute('CREATE INDEX IF NOT EXISTS idx_resumenes_generado ON resumenes(generado_en_utc)')
+	
 	conn.commit()
 	conn.close()
 	
@@ -301,6 +320,110 @@ def get_estadisticas() -> Dict[str, Any]:
 	conn.close()
 	
 	return stats
+
+
+# ============================================================================
+# FUNCIONES PARA RESUMENES
+# ============================================================================
+
+def obtener_ultimo_resumen() -> Optional[Dict[str, Any]]:
+	"""
+	Obtiene el resumen más reciente de la base de datos.
+	
+	Returns:
+		Dict con los datos del último resumen, o None si no hay resumenes
+	"""
+	conn = get_connection()
+	cursor = conn.cursor()
+	
+	cursor.execute('''
+		SELECT * FROM resumenes 
+		ORDER BY hasta_utc DESC 
+		LIMIT 1
+	''')
+	
+	row = cursor.fetchone()
+	conn.close()
+	
+	if row:
+		return dict(row)
+	return None
+
+
+def obtener_eventos_en_rango(desde_utc: str, hasta_utc: str) -> List[Dict[str, Any]]:
+	"""
+	Obtiene eventos en un rango de tiempo específico.
+	
+	Args:
+		desde_utc: Fecha inicial del rango en formato ISO8601 UTC
+		hasta_utc: Fecha final del rango en formato ISO8601 UTC
+	
+	Returns:
+		List[Dict]: Lista de eventos en el rango
+	"""
+	conn = get_connection()
+	cursor = conn.cursor()
+	
+	cursor.execute('''
+		SELECT * FROM eventos 
+		WHERE fecha_evento_utc >= ? AND fecha_evento_utc < ?
+		ORDER BY fecha_evento_utc ASC
+	''', (desde_utc, hasta_utc))
+	
+	rows = cursor.fetchall()
+	conn.close()
+	
+	eventos = []
+	for row in rows:
+		eventos.append(dict(row))
+	
+	return eventos
+
+
+def insertar_resumen(
+	desde_utc: str,
+	hasta_utc: str,
+	resumen_json: str,
+	tipo: Optional[str] = None,
+	fuente_eventos: str = 'eventos_sqlite',
+	estado_envio: str = 'pendiente',
+	canales_enviados: Optional[str] = None
+) -> int:
+	"""
+	Inserta un nuevo resumen en la base de datos.
+	
+	Args:
+		desde_utc: Inicio del rango de tiempo del resumen
+		hasta_utc: Fin del rango de tiempo del resumen
+		resumen_json: JSON del resumen como string
+		tipo: Tipo de resumen ('manana', 'tarde', 'automatico', etc.)
+		fuente_eventos: Fuente de los eventos resumidos
+		estado_envio: Estado del envío ('pendiente', 'enviado', 'error')
+		canales_enviados: Canales donde se envió (separados por coma)
+	
+	Returns:
+		int: ID del resumen insertado
+	"""
+	conn = get_connection()
+	cursor = conn.cursor()
+	
+	generado_en_utc = datetime.utcnow().isoformat() + 'Z'
+	
+	cursor.execute('''
+		INSERT INTO resumenes (
+			desde_utc, hasta_utc, generado_en_utc, resumen_json,
+			tipo, fuente_eventos, estado_envio, canales_enviados
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+	''', (
+		desde_utc, hasta_utc, generado_en_utc, resumen_json,
+		tipo, fuente_eventos, estado_envio, canales_enviados
+	))
+	
+	resumen_id = cursor.lastrowid
+	conn.commit()
+	conn.close()
+	
+	return resumen_id
 
 
 if __name__ == '__main__':
