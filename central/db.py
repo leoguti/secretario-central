@@ -174,6 +174,54 @@ def get_eventos_recientes(limit: int = 10) -> List[Dict[str, Any]]:
 	return eventos
 
 
+def existe_evento(fuente: str, fuente_id: str) -> bool:
+	"""
+	Verifica si ya existe un evento con la combinación fuente + fuente_id.
+	
+	Args:
+		fuente: Fuente del evento ('gmail', 'calendar', etc.)
+		fuente_id: ID original en la fuente
+	
+	Returns:
+		bool: True si el evento ya existe, False en caso contrario
+	"""
+	conn = get_connection()
+	cursor = conn.cursor()
+	
+	cursor.execute('''
+		SELECT COUNT(*) as count FROM eventos 
+		WHERE fuente = ? AND fuente_id = ?
+	''', (fuente, fuente_id))
+	
+	result = cursor.fetchone()
+	conn.close()
+	
+	return result['count'] > 0
+
+
+def actualizar_timestamp_evento(fuente: str, fuente_id: str):
+	"""
+	Actualiza el campo actualizado_en_utc de un evento existente.
+	
+	Args:
+		fuente: Fuente del evento
+		fuente_id: ID original en la fuente
+	"""
+	conn = get_connection()
+	cursor = conn.cursor()
+	
+	ahora = datetime.utcnow().isoformat() + 'Z'
+	
+	cursor.execute('''
+		UPDATE eventos 
+		SET actualizado_en_utc = ? 
+		WHERE fuente = ? AND fuente_id = ?
+	''', (ahora, fuente, fuente_id))
+	
+	conn.commit()
+	conn.close()
+
+
 def get_eventos_por_proyecto(proyecto: str, limit: int = 20) -> List[Dict[str, Any]]:
 	"""
 	Obtiene eventos filtrados por proyecto.

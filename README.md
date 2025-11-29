@@ -94,6 +94,55 @@ Este script:
 - Muestra los eventos más recientes
 - Muestra estadísticas por fuente, proyecto e importancia
 
+### Ingesta de correos de Gmail
+
+Para importar correos de Gmail a la base de datos de eventos, ejecuta:
+
+```bash
+python -m central.gmail_ingest
+```
+
+**¿Qué hace este comando?**
+- Obtiene correos recibidos en los **últimos 3 días**
+- **Excluye** automáticamente:
+  - Promociones (CATEGORY_PROMOTIONS)
+  - Mensajes sociales (CATEGORY_SOCIAL)
+- Inserta cada correo como un evento en la tabla `eventos`
+- **Evita duplicados**: verifica si el correo ya fue procesado usando `fuente_id`
+- Mapea información del correo a campos de eventos:
+  - `fuente` → 'gmail'
+  - `tipo` → 'email'
+  - `actor_email` → remitente del correo
+  - `asunto` → subject del correo
+  - `extracto` → snippet de Gmail
+  - `url_origen` → enlace web al correo en Gmail
+  - `fecha_evento_utc` → timestamp del correo en UTC
+
+**Resultado esperado:**
+```
+============================================================
+INGESTA DE CORREOS DE GMAIL
+============================================================
+→ Buscando correos de los últimos 3 días...
+→ Excluyendo: promociones y sociales
+
+✓ Se encontraron 15 mensajes
+
+  ✓ Insertado: Reunión proyecto GTFS México...
+  ○ Ya existe: Propuesta OSM Colombia...
+  ✓ Insertado: Actualización Arequipa OMUS...
+  
+============================================================
+RESUMEN DE INGESTA
+============================================================
+  Mensajes analizados:  15
+  Nuevos insertados:    12
+  Ya existían:          3
+============================================================
+```
+
+**Nota:** La primera vez que ejecutes este comando puede pedirte autorización en el navegador para acceder a Gmail.
+
 ## Endpoints disponibles
 
 ### API Principal
