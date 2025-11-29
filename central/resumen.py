@@ -8,7 +8,7 @@ para generar un resumen estructurado, y lo guarda en la tabla resumenes.
 import os
 import json
 from datetime import datetime, timedelta
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, Tuple
 
 from central.db import (
 	init_db,
@@ -88,7 +88,7 @@ def verificar_api_key() -> bool:
 	return True
 
 
-def calcular_rango_resumen() -> tuple[str, str]:
+def calcular_rango_resumen() -> Tuple[str, str]:
 	"""
 	Calcula el rango de tiempo para el nuevo resumen.
 	
