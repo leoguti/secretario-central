@@ -4,3 +4,10 @@ __pycache__/
 .env
 token.json
 credentials.json
+ls_remoto.sh
+
+# Base de datos SQLite
+data/
+*.db
+*.sqlite
+*.sqlite3
