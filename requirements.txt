@@ -10,5 +10,5 @@ google-auth-oauthlib==1.2.1
 # OpenAI para resúmenes automáticos
 openai>=1.0.0,<1.55.0
 
-# Fijar una versión compatible de MarkupSafe para este servidor
-MarkupSafe==2.0.1
+# MarkupSafe (compatible con Flask y Werkzeug)
+MarkupSafe>=2.1.1
