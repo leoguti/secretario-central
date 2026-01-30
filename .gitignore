@@ -2,12 +2,38 @@
 __pycache__/
 *.pyc
 .env
-token.json
-credentials.json
-ls_remoto.sh
+
+# Tokens y credenciales OAuth
+token*.json
+token*.json.backup
+credentials*.json
+client_secret*.json
+oauth_config.json
 
 # Base de datos SQLite
 data/
 *.db
 *.sqlite
 *.sqlite3
+
+# Archivos temporales
+*.log
+*.tmp
+
+# Experimentos (ya movidos a carpeta)
+experimentos/
+
+# PDFs personales
+*.pdf
+
+# Carpetas de respaldo
+whatsapp_backups/
+
+# Extensiones experimentales
+gmeet-transcription-extension/
+
+# Android tools
+platform-tools/
+
+# Archivos de sistema
+nohup.out

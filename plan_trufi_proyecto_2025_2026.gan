@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?><project name="CIMO 3 – Aplicación Móvil de Planificación de Viajes (Trujillo)" company="Trufi Association e.V." webLink="https://www.trufi-association.org" view-date="2025-09-08" view-index="0" gantt-divider-location="694" resource-divider-location="300" version="3.3.3322" locale="es_ES">
+    <description><![CDATA[Plan maestro basado en la conversación con Leonardo Gutiérrez. Inicio 2025-10-27 · Cierre 2026-03-30. Incluye hitos: AAR, Formato Gestor, Validación MobilityData, Branding, Infra Municipal, Validación API-AN. | ACTUALIZADO 22-ene-2026: Fechas reales, cambios de alcance (GTFS desde cero, lanzamiento marzo, migración abril).]]></description>
+    <view zooming-state="default:7" id="gantt-chart">
+        <field id="tpd3" name="Nombre" width="463" order="0"/>
+        <field id="tpd4" name="Fecha de inicio" width="71" order="1"/>
+        <field id="tpd5" name="Fecha de fin" width="94" order="2"/>
+        <field id="tpd6" name="Duración" width="50" order="3"/>
+        <option id="filter.completedTasks" value="false"/>
+        <option id="filter.dueTodayTasks" value="false"/>
+        <option id="filter.overdueTasks" value="false"/>
+        <option id="filter.inProgressTodayTasks" value="false"/>
+    </view>
+    <view id="resource-table">
+        <field id="0" name="Nombre" width="198" order="0"/>
+        <field id="1" name="Función" width="98" order="1"/>
+    </view>
+    <!-- -->
+    <calendars base-id="Ninguna">
+        <day-types>
+            <day-type id="0"/>
+            <day-type id="1"/>
+            <default-week id="1" name="default" sun="1" mon="0" tue="0" wed="0" thu="0" fri="0" sat="1"/>
+            <only-show-weekends value="false"/>
+            <overriden-day-types/>
+            <days/>
+        </day-types>
+        <date year="2025" month="12" date="31" type="HOLIDAY" color="#808080"/>
+        <date year="2026" month="1" date="1" type="HOLIDAY"/>
+    </calendars>
+    <tasks empty-milestones="true">
+        <taskproperties>
+            <taskproperty id="tpd0" name="type" type="default" valuetype="icon"/>
+            <taskproperty id="tpd1" name="priority" type="default" valuetype="icon"/>
+            <taskproperty id="tpd2" name="info" type="default" valuetype="icon"/>
+            <taskproperty id="tpd3" name="name" type="default" valuetype="text"/>
+            <taskproperty id="tpd4" name="begindate" type="default" valuetype="date"/>
+            <taskproperty id="tpd5" name="enddate" type="default" valuetype="date"/>
+            <taskproperty id="tpd6" name="duration" type="default" valuetype="int"/>
+            <taskproperty id="tpd7" name="completion" type="default" valuetype="int"/>
+            <taskproperty id="tpd8" name="coordinator" type="default" valuetype="text"/>
+            <taskproperty id="tpd9" name="predecessorsr" type="default" valuetype="text"/>
+        </taskproperties>
+        <task id="100" uid="9896289f5b444d3caf76d1944939e2fe" name="FASE 0 · Arranque y coordinación" color="#8db4e2" meeting="false" start="2025-10-28" duration="1" complete="0" expand="true">
+            <depend id="301" type="2" difference="0" hardness="Strong"/>
+            <depend id="302" type="2" difference="0" hardness="Strong"/>
+            <task id="101" uid="eefc1316aa724eaba91ca9f6848ddc10" name="A001 Kick-off y canales (Slack/Drive/Docs)" meeting="true" start="2025-10-28" duration="0" complete="100" expand="true">
+                <depend id="103" type="2" difference="0" hardness="Strong"/>
+            </task>
+            <task id="103" uid="06cc2bd6524b4bffae2cf77b4d1c13cc" name="A002 Plan de trabajo y comunicación + cronograma validado" meeting="true" start="2025-10-28" duration="0" complete="100" expand="true"/>
+        </task>
+        <task id="200" uid="c1d4712d2162415391c211044e509304" name="FASE 1 · Preparación técnica" color="#a8d08d" meeting="false" start="2025-10-22" duration="16" complete="100" expand="true">
+            <task id="203" uid="dd4e649620a143919d7fd6d87a3e8446" name="A101 Definición API-AN (endpoints, métricas, seguridad)" meeting="false" start="2025-10-27" duration="13" complete="100" expand="true">
+                <depend id="204" type="3" difference="0" hardness="Strong"/>
+                <depend id="402" type="2" difference="0" hardness="Strong"/>
+            </task>
+            <task id="204" uid="a47319f4c81346b1a7af62db93d190b4" name="A102 Definición requisitos SITR (especificación preliminar hacia gestor)" meeting="false" start="2025-10-22" duration="16" complete="100" expand="true"/>
+        </task>
+        <task id="300" uid="f722dc1908cf4533881d59b2a4a50e04" name="FASE 2 · Datos de transporte (GTFS)" color="#ffd966" meeting="false" start="2025-10-29" duration="80" complete="88" expand="true">
+            <task id="301" uid="37bd4d454fc944968b68ccb641cfe00e" name="A201 Revisión de fuentes (KML/GeoJSON/Excel/GTFS existente)" meeting="false" start="2025-10-29" duration="24" complete="100" expand="true"/>
+            <task id="805" uid="2cd4d63e3fbf4e4eb4db9fe3aa42caa8" name="A202.1 Pruebas del desarrollador Gestor de flota" meeting="true" start="2026-02-06" duration="0" complete="0" expand="true">
+                <depend id="310" type="2" difference="0" hardness="Strong"/>
+                <depend id="404" type="2" difference="0" hardness="Strong"/>
+            </task>
+            <task id="302" uid="ac53b4f82b7748c5af0913785d92f8a6" name="A203 Definición de codificación con la autoridad" meeting="true" start="2025-10-29" duration="0" complete="0" expand="true"/>
+            <task id="304" uid="9080b7a559654059a56adab5e1c11d7b" name="A204 Elaboración AAR v1 y concertación" meeting="true" start="2025-12-02" duration="0" complete="100" expand="true">
+                <depend id="305" type="2" difference="0" hardness="Strong"/>
+                <depend id="308" type="2" difference="0" hardness="Strong"/>
+            </task>
+            <task id="305" uid="3be0503a8b084bfeb0e6115d175fa3d9" name="A205 AAR validado y firmado [HITO]" meeting="true" start="2025-12-02" duration="0" complete="100" expand="true">
+                <depend id="306" type="2" difference="0" hardness="Strong"/>
+            </task>
+            <task id="804" uid="4deee3e0820f49d38457f8d01cc68a6b" name="A206 Revision de paraderos de Transporte público" meeting="false" start="2025-11-24" duration="25" complete="100" expand="true"/>
+            <task id="806" uid="d384e95afd9b4ff888d952c5403c8581" name="A206.1 Entrega paraderos centro" meeting="true" start="2025-11-24" duration="0" complete="0" expand="true">
+                <depend id="804" type="2" difference="0" hardness="Strong"/>
+            </task>
+            <task id="807" uid="27fb770299db489ab43a3acb38a77eeb" name="A206.2 Entrega paraderos periferia" color="#000000" meeting="true" start="2025-12-26" duration="0" complete="0" expand="true">
+                <depend id="808" type="2" difference="0" hardness="Strong"/>
+            </task>
+            <task id="808" uid="a6609a96fffc4c049a24ce703c2799e6" name="A206.3 Segunda Revision paraderos" color="#8cb6ce" meeting="false" start="2025-12-26" duration="15" complete="100" expand="true"/>
+            <task id="306" uid="fe1ebde47b564cf99c2a86a68fe3f67d" name="A207 Evaluación de necesidad de toma de campo" meeting="true" start="2025-12-02" duration="0" complete="100" expand="true"/>
+            <task id="308" uid="c5c255392a7b45f2b3d9300afa2b1856" name="A209 Subida a Openstreetmap + revisión topológica" meeting="false" start="2025-12-02" duration="15" complete="100" expand="true">
+                <depend id="804" type="3" difference="0" hardness="Strong"/>
+                <depend id="809" type="2" difference="0" hardness="Strong"/>
+            </task>
+            <task id="309" uid="7f59c0ea4973440ba58053e92d11237a" name="A210 Consolidación del feed GTFS (rutas, trips, shapes, calendars, fares)" meeting="false" start="2025-12-23" duration="17" complete="0" expand="true">
+                <task id="809" uid="2538bff1bbfb44ecb441768fc597c864" name="A210.1 GTFS Version 1" color="#8cb6ce" meeting="true" start="2025-12-23" duration="0" complete="100" expand="true"/>
+                <task id="810" uid="85c47c46dbd0482aa063fbcdfb9cf596" name="A210.2 GTFS Version 2" color="#8cb6ce" meeting="true" start="2026-01-06" duration="0" complete="100" expand="true"/>
+                <task id="811" uid="20677ca0f9e445e48903825fea61afa3" name="A210.3 GTFS Version 3" color="#8cb6ce" meeting="true" start="2026-01-14" duration="0" complete="100" expand="true"/>
+                <task id="812" uid="48b40ce916364f20ab29f7b0eba3a51c" name="A210.4 GTFS Version 4" color="#8cb6ce" meeting="true" start="2026-01-16" duration="0" complete="100" expand="true"/>
+                <task id="813" uid="6e5821a73d334bea8341d99807ec11ef" name="A210.5 GTFS Version 5" color="#8cb6ce" meeting="true" start="2026-01-19" duration="0" complete="100" expand="true"/>
+            </task>
+            <task id="310" uid="cce6dd52e5e44f88a9d1a742502c7302" name="A211 Compatibilidad GTFS–gestor (final)" meeting="false" start="2026-02-06" duration="10" complete="0" expand="true"/>
+        </task>
+        <task id="400" uid="28e947b086be4ed489579ccede00349f" name="FASE 3 · Backend y servicios (API-AN + SITR)" color="#f4b183" meeting="false" start="2025-11-13" duration="84" complete="58" expand="true">
+            <task id="402" uid="66a13fae3c604b1799dd6aaaa86496f2" name="A302 Desarrollo API-AN (implementación backend)" meeting="false" start="2025-11-13" duration="59" complete="80" expand="true"/>
+            <task id="403" uid="eadf064856384d3897c07983d83c0889" name="A303 Pruebas internas de API-AN" meeting="false" start="2026-03-06" duration="5" complete="0" expand="true">
+                <depend id="604" type="2" difference="0" hardness="Strong"/>
+            </task>
+            <task id="404" uid="fe8fe6406b324e14903171a0c95990f5" name="A304 Desarrollo SITR (adaptación al formato, integración con OTP)" meeting="false" start="2026-02-06" duration="20" complete="0" expand="true">
+                <depend id="403" type="2" difference="0" hardness="Strong"/>
+                <depend id="603" type="2" difference="0" hardness="Strong"/>
+            </task>
+            <task id="405" uid="0d94f06468ec43a393d96c28f066493b" name="A305 Montaje en nube" meeting="false" start="2025-12-30" duration="4" complete="100" expand="true">
+                <depend id="501" type="2" difference="0" hardness="Strong"/>
+            </task>
+        </task>
+        <task id="500" uid="20f393035e6c4351906fec743278db09" name="FASE 4 · Aplicación (móvil/web)" color="#c9b2d9" meeting="false" start="2026-01-07" duration="52" complete="0" expand="true">
+            <task id="501" uid="ee35c6e99ca84e04a7a34d9153fc0a56" name="A401 Primera Version de pruebas aplicativo" meeting="true" start="2026-01-07" duration="0" complete="100" expand="true">
+                <depend id="502" type="2" difference="0" hardness="Strong"/>
+            </task>
+            <task id="505" uid="24941b9ee7bb442587e854b9c7bdc84d" name="A402 Branding oficial recibido [HITO]" meeting="true" start="2026-02-05" duration="0" complete="0" expand="true">
+                <depend id="502" type="2" difference="0" hardness="Strong"/>
+            </task>
+            <task id="502" uid="44503a5072924b598bcb938dbf549e01" name="A403 Integración Aplicativo con GTFS definitivo y Branding" meeting="false" start="2026-02-05" duration="7" complete="0" expand="true"/>
+            <task id="504" uid="c4d81cbfe76943998209496c566ac7b1" name="A405 Builds internas para QA" meeting="false" start="2026-03-13" duration="5" complete="0" expand="true"/>
+        </task>
+        <task id="600" uid="8151ed48fd08404e80cd2952e6dc83e2" name="FASE 5 · Pruebas y aseguramiento de calidad" color="#b7dee8" meeting="false" start="2026-03-06" duration="12" complete="0" expand="true">
+            <depend id="814" type="2" difference="0" hardness="Strong"/>
+            <task id="603" uid="254e8e6a98194d7e9f3572ea35c78466" name="A501 Pruebas SITR con el gestor de flotas" meeting="false" start="2026-03-06" duration="10" complete="0" expand="true"/>
+            <task id="604" uid="b3e872ba227d442da1eab7bce6c9f010" name="A503 Validación anticipada de la API-AN (Power BI) [HITO]" meeting="false" start="2026-03-13" duration="7" complete="0" expand="true"/>
+        </task>
+        <task id="700" uid="da0761357fea410ca3fb3d01706e40ea" name="FASE 6 · Puesta en producción" color="#f8cbad" meeting="false" start="2026-03-24" duration="25" complete="0" expand="true">
+            <task id="701" uid="69f381bb4bbf42f2865b9190a2578791" name="A601 Infraestructura municipal operativa [HITO externo]" meeting="true" start="2026-04-01" duration="0" complete="0" expand="true">
+                <depend id="702" type="2" difference="0" hardness="Strong"/>
+            </task>
+            <task id="702" uid="97c690cf7e7649eca1577c542953018d" name="A602 Migración a servidores municipales" meeting="false" start="2026-04-01" duration="7" complete="0" expand="true">
+                <depend id="703" type="2" difference="0" hardness="Strong"/>
+                <depend id="802" type="2" difference="0" hardness="Strong"/>
+            </task>
+            <task id="703" uid="66aec8597c6644e69229edc13271c974" name="A603 Publicación en tiendas/web municipal" meeting="false" start="2026-04-10" duration="7" complete="0" expand="true">
+                <depend id="704" type="2" difference="0" hardness="Strong"/>
+                <depend id="802" type="2" difference="0" hardness="Strong"/>
+            </task>
+            <task id="704" uid="308f78b2356f4151ac227cc1f9a75fcd" name="A604 Go-Live y estabilización" meeting="false" start="2026-04-21" duration="5" complete="0" expand="true"/>
+            <task id="814" uid="d722ab3481d04912a9272eb9b6c1fd8e" name="A605 integracion en tiendas stores de la municipalidad version en la nube" meeting="false" start="2026-03-24" duration="5" complete="0" expand="true">
+                <depend id="815" type="2" difference="0" hardness="Strong"/>
+            </task>
+            <task id="815" uid="2a8943c360d54ac79e7de8c1cd233764" name="A606 Lanzamiento app con infraestructura en la nube (no local)" meeting="true" start="2026-03-31" duration="0" complete="0" expand="true">
+                <depend id="801" type="2" difference="0" hardness="Strong"/>
+            </task>
+        </task>
+        <task id="800" uid="df76de04adad4e919fcfd1adf7c67ce7" name="FASE 7 · Transferencia y cierre técnico" color="#a9d18e" meeting="false" start="2026-03-31" duration="18" complete="0" expand="true">
+            <task id="801" uid="31828629bd4d42d6872ac1be7e396902" name="A701 Documentación final técnica y operativa" meeting="false" start="2026-03-31" duration="6" complete="0" expand="true">
+                <depend id="802" type="2" difference="0" hardness="Strong"/>
+            </task>
+            <task id="802" uid="32e654c169714000be4884176635d080" name="A702 Sesión virtual de transferencia técnica" meeting="true" start="2026-04-21" duration="0" complete="0" expand="true">
+                <depend id="803" type="2" difference="0" hardness="Strong"/>
+            </task>
+            <task id="803" uid="82aeea0e536e4567ba5765feaacf740c" name="A703 Entrega de código y migración de cuentas" meeting="false" start="2026-04-21" duration="3" complete="0" expand="true"/>
+        </task>
+    </tasks>
+    <resources>
+        <resource id="1" name="Trufi" function="Default:0" contacts="info@trufi.app" phone=""/>
+        <resource id="2" name="TranConsult" function="Default:0" contacts="" phone=""/>
+        <resource id="3" name="Municipalidad" function="Default:0" contacts="" phone=""/>
+        <resource id="4" name="Gestor de flotas" function="Default:0" contacts="" phone=""/>
+        <resource id="5" name="GIZ" function="Default:0" contacts="" phone=""/>
+        <resource id="6" name="CIMO" function="Default:0" contacts="" phone=""/>
+    </resources>
+    <allocations>
+        <allocation task-id="101" resource-id="1" function="Default:0" responsible="false" load="0.0"/>
+        <allocation task-id="203" resource-id="1" function="Default:0" responsible="false" load="0.0"/>
+        <allocation task-id="204" resource-id="1" function="Default:0" responsible="false" load="0.0"/>
+        <allocation task-id="301" resource-id="1" function="Default:0" responsible="false" load="0.0"/>
+        <allocation task-id="304" resource-id="1" function="Default:0" responsible="false" load="0.0"/>
+        <allocation task-id="308" resource-id="1" function="Default:0" responsible="false" load="0.0"/>
+        <allocation task-id="309" resource-id="1" function="Default:0" responsible="false" load="0.0"/>
+        <allocation task-id="402" resource-id="1" function="Default:0" responsible="false" load="0.0"/>
+        <allocation task-id="404" resource-id="1" function="Default:0" responsible="false" load="0.0"/>
+        <allocation task-id="405" resource-id="1" function="Default:0" responsible="false" load="0.0"/>
+        <allocation task-id="501" resource-id="1" function="Default:0" responsible="false" load="0.0"/>
+        <allocation task-id="502" resource-id="1" function="Default:0" responsible="false" load="0.0"/>
+        <allocation task-id="702" resource-id="1" function="Default:0" responsible="false" load="0.0"/>
+        <allocation task-id="703" resource-id="1" function="Default:0" responsible="false" load="0.0"/>
+        <allocation task-id="704" resource-id="1" function="Default:0" responsible="false" load="0.0"/>
+        <allocation task-id="801" resource-id="1" function="Default:0" responsible="false" load="0.0"/>
+        <allocation task-id="802" resource-id="1" function="Default:0" responsible="false" load="0.0"/>
+        <allocation task-id="803" resource-id="1" function="Default:0" responsible="false" load="0.0"/>
+        <allocation task-id="504" resource-id="1" function="Default:0" responsible="false" load="0.0"/>
+        <allocation task-id="809" resource-id="1" function="Default:0" responsible="false" load="0.0"/>
+        <allocation task-id="810" resource-id="1" function="Default:0" responsible="false" load="0.0"/>
+        <allocation task-id="811" resource-id="1" function="Default:0" responsible="false" load="0.0"/>
+        <allocation task-id="812" resource-id="1" function="Default:0" responsible="false" load="0.0"/>
+        <allocation task-id="813" resource-id="1" function="Default:0" responsible="false" load="0.0"/>
+        <allocation task-id="103" resource-id="2" function="Default:0" responsible="false" load="0.0"/>
+        <allocation task-id="604" resource-id="2" function="Default:0" responsible="false" load="0.0"/>
+        <allocation task-id="305" resource-id="3" function="Default:0" responsible="false" load="0.0"/>
+        <allocation task-id="505" resource-id="3" function="Default:0" responsible="false" load="0.0"/>
+        <allocation task-id="701" resource-id="3" function="Default:0" responsible="false" load="0.0"/>
+        <allocation task-id="603" resource-id="4" function="Default:0" responsible="false" load="0.0"/>
+    </allocations>
+    <vacations/>
+    <previous/>
+    <roles roleset-name="Default"/>
+</project>
