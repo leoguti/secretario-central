@@ -72,22 +72,9 @@ if [ -f "$PIDFILE" ] && kill -0 "$(cat "$PIDFILE")" 2>/dev/null; then
 
     log "Transcribed: $TEXT"
 
-    # Copy to clipboard
-    if command -v wl-copy &>/dev/null; then
-        echo -n "$TEXT" | wl-copy
-    fi
-
-    # Auto-type into active window with ydotool
-    if command -v ydotool &>/dev/null; then
-        sleep 0.3
-        if sg input -c "ydotool type -- \"$TEXT\"" 2>/dev/null; then
-            notify-send -u normal -t 3000 "Dictado" "$TEXT"
-        else
-            notify-send -u normal -t 5000 "Dictado" "Copiado: $TEXT (Ctrl+Shift+V para pegar)"
-        fi
-    else
-        notify-send -u normal -t 5000 "Dictado" "Copiado: $TEXT (Ctrl+Shift+V para pegar)"
-    fi
+    # Copy to clipboard and notify
+    echo -n "$TEXT" | wl-copy
+    notify-send -u normal -t 5000 "Dictado - Listo" "Ctrl+Shift+V para pegar"
 
     # Cleanup
     rm -f "$AUDIOFILE"
