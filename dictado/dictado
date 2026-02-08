@@ -1,0 +1,109 @@
+#!/bin/bash
+# dictado - Push-to-talk dictation for Claude Code via Whisper API
+# Usage: Press F9 to start recording, F9 again to stop and transcribe.
+# The transcribed text is copied to clipboard and auto-typed into the active window.
+
+set -uo pipefail
+
+PIDFILE="/tmp/dictado-recording.pid"
+AUDIOFILE="/tmp/dictado-audio.wav"
+ENVFILE="$HOME/.config/dictado/.env"
+LOGFILE="/tmp/dictado.log"
+
+# Load API key
+if [ ! -f "$ENVFILE" ]; then
+    notify-send -u critical "Dictado" "No se encontró $ENVFILE"
+    exit 1
+fi
+source "$ENVFILE"
+
+if [ -z "${OPENAI_API_KEY:-}" ]; then
+    notify-send -u critical "Dictado" "OPENAI_API_KEY no configurada"
+    exit 1
+fi
+
+log() {
+    echo "$(date '+%H:%M:%S') $1" >> "$LOGFILE"
+}
+
+# Check if currently recording
+if [ -f "$PIDFILE" ] && kill -0 "$(cat "$PIDFILE")" 2>/dev/null; then
+    # === STOP RECORDING & TRANSCRIBE ===
+    PID=$(cat "$PIDFILE")
+    kill -INT "$PID" 2>/dev/null || true
+    rm -f "$PIDFILE"
+
+    # Wait for ffmpeg to finalize the WAV file properly
+    sleep 1
+
+    # Check audio file exists and has content
+    if [ ! -s "$AUDIOFILE" ]; then
+        notify-send -u normal -t 3000 "Dictado" "No se grabó audio"
+        log "ERROR: Empty audio file"
+        exit 1
+    fi
+
+    notify-send -u low -t 2000 "Dictado" "Transcribiendo..."
+    log "Sending to Whisper API..."
+
+    # Call Whisper API
+    RESPONSE=$(curl -s --max-time 30 \
+        https://api.openai.com/v1/audio/transcriptions \
+        -H "Authorization: Bearer $OPENAI_API_KEY" \
+        -F file="@$AUDIOFILE" \
+        -F model="whisper-1" \
+        -F language="es" \
+        -F response_format="json")
+
+    TEXT=$(echo "$RESPONSE" | jq -r '.text // empty')
+
+    if [ -z "$TEXT" ]; then
+        ERROR=$(echo "$RESPONSE" | jq -r '.error.message // "Error desconocido"')
+        notify-send -u critical -t 5000 "Dictado - Error" "$ERROR"
+        log "ERROR: $ERROR"
+        rm -f "$AUDIOFILE"
+        exit 1
+    fi
+
+    log "Transcribed: $TEXT"
+
+    # Copy to clipboard
+    if command -v wl-copy &>/dev/null; then
+        echo -n "$TEXT" | wl-copy
+    fi
+
+    # Auto-type into active window with ydotool
+    if command -v ydotool &>/dev/null; then
+        sleep 0.3
+        if sg input -c "ydotool type -- \"$TEXT\"" 2>/dev/null; then
+            notify-send -u normal -t 3000 "Dictado" "$TEXT"
+        else
+            notify-send -u normal -t 5000 "Dictado" "Copiado: $TEXT (Ctrl+Shift+V para pegar)"
+        fi
+    else
+        notify-send -u normal -t 5000 "Dictado" "Copiado: $TEXT (Ctrl+Shift+V para pegar)"
+    fi
+
+    # Cleanup
+    rm -f "$AUDIOFILE"
+
+else
+    # === START RECORDING ===
+    rm -f "$AUDIOFILE" "$PIDFILE"
+
+    # Record from default audio source via PipeWire/PulseAudio (16kHz mono WAV)
+    ffmpeg -y -f pulse -i default -ar 16000 -ac 1 -t 120 "$AUDIOFILE" </dev/null &>/dev/null &
+    RECPID=$!
+
+    # Verify recording actually started
+    sleep 0.8
+    if ! kill -0 "$RECPID" 2>/dev/null; then
+        notify-send -u critical -t 5000 "Dictado" "Error al iniciar grabación. Verifica micrófono."
+        log "ERROR: ffmpeg recording failed to start"
+        exit 1
+    fi
+
+    echo "$RECPID" > "$PIDFILE"
+    notify-send -u normal -t 2000 "Dictado" "Grabando... Presiona F9 para terminar"
+    log "Recording started (PID: $RECPID)"
+fi
