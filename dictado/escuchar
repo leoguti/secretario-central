@@ -1,0 +1,137 @@
+#!/bin/bash
+# escuchar - Intérprete en tiempo real de audio del sistema
+# Captura audio (Chrome, Meet, Zoom, etc.), transcribe y traduce al español
+# Usage: escuchar [language] [chunk_seconds]
+#   language: idioma del audio - en (default), pt, fr, de, etc.
+#   chunk_seconds: segundos por chunk (default: 8)
+
+set -uo pipefail
+
+LANG_CODE="${1:-en}"
+CHUNK_SECS="${2:-8}"
+TMPDIR="/tmp/escuchar"
+MONITOR="alsa_output.pci-0000_00_1f.3.analog-stereo.monitor"
+
+TIMESTAMP=$(date '+%Y-%m-%d_%H%M')
+TRANSCRIPT_FILE="$HOME/transcripciones/transcripcion_${TIMESTAMP}.txt"
+mkdir -p "$TMPDIR" "$HOME/transcripciones"
+
+# Load API key
+if command -v op &>/dev/null; then
+    OPENAI_API_KEY=$(op read "op://Private/OpenAI API Key/password" 2>/dev/null || true)
+fi
+if [ -z "${OPENAI_API_KEY:-}" ] && [ -f "$HOME/.config/dictado/.env" ]; then
+    source "$HOME/.config/dictado/.env"
+fi
+if [ -z "${OPENAI_API_KEY:-}" ]; then
+    echo "ERROR: No se encontró API key"
+    exit 1
+fi
+
+REC_PID=""
+PREV_PID=""
+cleanup() {
+    echo ""
+    echo "=== Fin de la escucha ==="
+    [ -n "$REC_PID" ] && kill -INT "$REC_PID" 2>/dev/null || true
+    [ -n "$PREV_PID" ] && kill -INT "$PREV_PID" 2>/dev/null || true
+    wait 2>/dev/null || true
+    echo "Transcripcion guardada en: $TRANSCRIPT_FILE"
+    rm -rf "$TMPDIR"
+    exit 0
+}
+trap cleanup INT TERM
+
+process_chunk() {
+    local file="$1"
+    [ ! -s "$file" ] && return
+
+    # 1. Transcribe with Whisper
+    local whisper_response
+    whisper_response=$(curl -s --max-time 20 \
+        https://api.openai.com/v1/audio/transcriptions \
+        -H "Authorization: Bearer $OPENAI_API_KEY" \
+        -F file="@$file" \
+        -F model="whisper-1" \
+        -F language="$LANG_CODE" \
+        -F response_format="json")
+
+    local original
+    original=$(echo "$whisper_response" | jq -r '.text // empty')
+    [ -z "$original" ] && return
+    rm -f "$file"
+
+    # 2. Translate + interpret with GPT-4o-mini (fast and cheap)
+    local gpt_response
+    gpt_response=$(curl -s --max-time 15 \
+        https://api.openai.com/v1/chat/completions \
+        -H "Authorization: Bearer $OPENAI_API_KEY" \
+        -H "Content-Type: application/json" \
+        -d "$(jq -n --arg text "$original" '{
+            model: "gpt-4o-mini",
+            messages: [
+                {
+                    role: "system",
+                    content: "Eres un intérprete en tiempo real. Traduce al español de forma natural y concisa. Si el fragmento es confuso o incompleto, interpreta lo mejor posible. No agregues explicaciones, solo la traducción. Si hay una pregunta directa, márcala con [PREGUNTA]."
+                },
+                {
+                    role: "user",
+                    content: $text
+                }
+            ],
+            max_tokens: 300,
+            temperature: 0.3
+        }')")
+
+    local traduccion
+    traduccion=$(echo "$gpt_response" | jq -r '.choices[0].message.content // empty')
+
+    local ts
+    ts=$(date '+%H:%M:%S')
+
+    if [ -n "$traduccion" ]; then
+        echo -e "\033[90m[$ts EN]\033[0m $original"
+        echo -e "\033[1;32m[$ts ES]\033[0m $traduccion"
+        echo ""
+        echo "[$ts EN] $original" >> "$TRANSCRIPT_FILE"
+        echo "[$ts ES] $traduccion" >> "$TRANSCRIPT_FILE"
+        echo "" >> "$TRANSCRIPT_FILE"
+    else
+        echo -e "\033[90m[$ts]\033[0m $original"
+        echo "[$ts] $original" >> "$TRANSCRIPT_FILE"
+    fi
+}
+
+echo "=== Intérprete en tiempo real ==="
+echo "Audio: $LANG_CODE → español | Chunks: ${CHUNK_SECS}s"
+echo "Transcripcion: $TRANSCRIPT_FILE"
+echo "Ctrl+C para detener"
+echo "---"
+echo ""
+
+CHUNK_NUM=0
+PREV_PID=""
+while true; do
+    CHUNK_FILE="$TMPDIR/chunk_${CHUNK_NUM}.wav"
+    PREV_FILE="$TMPDIR/chunk_$(( CHUNK_NUM - 1 )).wav"
+
+    # Start NEW recording BEFORE stopping the previous one (overlap = no gaps)
+    pw-record --target="$MONITOR" --rate=16000 --channels=1 --format=s16 "$CHUNK_FILE" </dev/null &>/dev/null &
+    REC_PID=$!
+
+    # Now stop the previous recording (1 second of overlap ensures no lost audio)
+    if [ -n "$PREV_PID" ]; then
+        kill -INT "$PREV_PID" 2>/dev/null || true
+        wait "$PREV_PID" 2>/dev/null || true
+    fi
+
+    # Process the previous chunk while current is recording
+    if [ -f "$PREV_FILE" ]; then
+        process_chunk "$PREV_FILE" &
+    fi
+
+    PREV_PID="$REC_PID"
+    sleep "$CHUNK_SECS"
+
+    CHUNK_NUM=$(( CHUNK_NUM + 1 ))
+done
