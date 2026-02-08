@@ -1,0 +1,76 @@
+{
+  "shadow": {
+    "B1": [
+      {"text": "I usually work from home, but sometimes I go to the office.", "topic": "daily routine"},
+      {"text": "Could you send me that report by the end of the day?", "topic": "work"},
+      {"text": "I've been working on this project for about three months now.", "topic": "present perfect continuous"},
+      {"text": "If I had more time, I would learn to play the guitar.", "topic": "conditionals"},
+      {"text": "The meeting was cancelled because the client couldn't make it.", "topic": "passive voice"},
+      {"text": "I'm not sure whether we should go ahead with this plan.", "topic": "uncertainty"},
+      {"text": "She asked me to help her with the presentation.", "topic": "reported speech"},
+      {"text": "We need to finish this before the deadline.", "topic": "work"},
+      {"text": "I haven't seen that movie yet, but I've heard it's good.", "topic": "present perfect"},
+      {"text": "Would you mind closing the window? It's a bit cold in here.", "topic": "polite requests"},
+      {"text": "I used to live in a small town, but I moved to the city five years ago.", "topic": "used to"},
+      {"text": "He told me that he was going to be late for the meeting.", "topic": "reported speech"},
+      {"text": "I'm looking forward to the weekend. I need some rest.", "topic": "phrasal verbs"},
+      {"text": "Can you pick me up at the airport tomorrow morning?", "topic": "phrasal verbs"},
+      {"text": "I think we should come up with a better solution.", "topic": "phrasal verbs"}
+    ],
+    "B2": [
+      {"text": "Had I known about the issue earlier, I would have handled it differently.", "topic": "third conditional inverted"},
+      {"text": "The project was supposed to be delivered last week, but we ran into some unexpected problems.", "topic": "past modals"},
+      {"text": "I'd rather not discuss this in front of the whole team, if you don't mind.", "topic": "preferences"},
+      {"text": "By the time we get the approval, the budget will have already been spent.", "topic": "future perfect"},
+      {"text": "It's high time we addressed the performance issues in our application.", "topic": "it's high time"},
+      {"text": "Not only did they miss the deadline, but they also went over budget.", "topic": "inversion"},
+      {"text": "The data suggests that user engagement has been declining steadily.", "topic": "data analysis"},
+      {"text": "We might as well start from scratch, since the current approach isn't working.", "topic": "might as well"},
+      {"text": "I wish I had paid more attention during the training session.", "topic": "wish + past perfect"},
+      {"text": "Despite having very little experience, she managed to get the job.", "topic": "despite + gerund"},
+      {"text": "The stakeholders are concerned about the lack of progress on the integration.", "topic": "work formal"},
+      {"text": "Let me walk you through the main findings of our research.", "topic": "presentations"},
+      {"text": "I couldn't help but notice that the numbers don't quite add up.", "topic": "couldn't help but"},
+      {"text": "As far as I'm concerned, we need to pivot our strategy.", "topic": "opinions"},
+      {"text": "There's no point in trying to fix something that's fundamentally broken.", "topic": "there's no point"}
+    ],
+    "C1": [
+      {"text": "The extent to which this policy has failed is only now becoming apparent.", "topic": "formal register"},
+      {"text": "Were it not for the last-minute intervention, the entire project would have collapsed.", "topic": "formal conditionals"},
+      {"text": "What strikes me most about this approach is its utter disregard for scalability.", "topic": "emphasis"},
+      {"text": "The underlying assumption here is that users will behave rationally, which is far from guaranteed.", "topic": "assumptions"},
+      {"text": "Notwithstanding the initial setbacks, the team has demonstrated remarkable resilience.", "topic": "formal connectors"},
+      {"text": "It goes without saying that data privacy should be our top priority.", "topic": "fixed expressions"},
+      {"text": "The fact remains that we're significantly behind schedule, and no amount of overtime is going to fix that.", "topic": "emphasis"},
+      {"text": "I appreciate your enthusiasm, but I think we need to take a step back and reassess.", "topic": "diplomatic language"},
+      {"text": "For all its shortcomings, the current system does have some advantages worth preserving.", "topic": "concession"},
+      {"text": "The implications of this decision will reverberate throughout the organization for years to come.", "topic": "formal vocabulary"}
+    ]
+  },
+  "dictation": {
+    "B1": [
+      {"text": "I need to pick up some groceries on my way home.", "focus": "phrasal verb + preposition"},
+      {"text": "She's been studying English since she was twelve years old.", "focus": "present perfect continuous"},
+      {"text": "They told us that the flight had been delayed by two hours.", "focus": "reported speech + passive"},
+      {"text": "If it rains tomorrow, we'll have to cancel the picnic.", "focus": "first conditional"},
+      {"text": "He's the kind of person who always puts others first.", "focus": "relative clauses"},
+      {"text": "I'm afraid I won't be able to attend the meeting on Friday.", "focus": "polite refusal"},
+      {"text": "Would you like me to give you a hand with that?", "focus": "offers"},
+      {"text": "The restaurant where we had dinner last night was fantastic.", "focus": "relative clauses"},
+      {"text": "I've just finished reading the book you recommended.", "focus": "present perfect + just"},
+      {"text": "We might need to push back the launch date a couple of weeks.", "focus": "modals + phrasal verbs"}
+    ],
+    "B2": [
+      {"text": "Seldom have I encountered such a well-structured argument in a business proposal.", "focus": "inversion with negative adverbs"},
+      {"text": "The board is expected to announce its decision by the end of the quarter.", "focus": "passive with expect"},
+      {"text": "No sooner had we launched the product than complaints started pouring in.", "focus": "no sooner...than"},
+      {"text": "It's crucial that every team member be aware of the new security protocols.", "focus": "subjunctive"},
+      {"text": "Regardless of the outcome, I believe we've all learned a great deal from this experience.", "focus": "formal connectors"},
+      {"text": "Had they consulted us beforehand, we could have avoided this costly mistake.", "focus": "inverted conditional"},
+      {"text": "The committee recommended that the proposal be revised and resubmitted.", "focus": "subjunctive"},
+      {"text": "Under no circumstances should confidential data be shared with third parties.", "focus": "inversion"},
+      {"text": "What concerns me most is the apparent lack of communication between departments.", "focus": "cleft sentences"},
+      {"text": "They're said to have been negotiating the deal for over six months.", "focus": "complex passive"}
+    ]
+  }
+}

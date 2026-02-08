@@ -1,0 +1,1159 @@
+#!/bin/bash
+# ingles - Programa de práctica de inglés interactivo
+# Usa TTS (hablar), STT (dictado/whisper), y GPT para feedback
+#
+# Modos:
+#   ingles eval       - Evaluación inicial de nivel
+#   ingles shadow     - Shadowing (escuchar y repetir)
+#   ingles dictation  - Dictado (escuchar y escribir)
+#   ingles chat       - Conversación libre con correcciones
+#   ingles grammar    - Ejercicios de gramática
+#   ingles            - Menú interactivo
+
+set -uo pipefail
+
+# === CONFIGURACIÓN ===
+DATA_DIR="$HOME/ingles"
+MATERIAL_DIR="$HOME/secretario/ingles"
+SESIONES_DIR="$DATA_DIR/sesiones"
+PROGRESO_FILE="$DATA_DIR/progreso.json"
+ERRORES_FILE="$DATA_DIR/errores.json"
+AUDIOFILE="/tmp/ingles-recording.wav"
+PIDFILE="/tmp/ingles-recording.pid"
+SESSION_LOG=""
+SESSION_START=""
+
+# Colores
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+BOLD='\033[1m'
+DIM='\033[2m'
+NC='\033[0m'
+
+# === CARGAR API KEY ===
+if command -v op &>/dev/null; then
+    OPENAI_API_KEY=$(op read "op://Private/OpenAI API Key/password" 2>/dev/null || true)
+fi
+if [ -z "${OPENAI_API_KEY:-}" ] && [ -f "$HOME/.config/dictado/.env" ]; then
+    source "$HOME/.config/dictado/.env"
+fi
+if [ -z "${OPENAI_API_KEY:-}" ]; then
+    echo "Error: no se encontró API key de OpenAI"
+    exit 1
+fi
+
+# === FUNCIONES UTILITARIAS ===
+
+init_session() {
+    local mode="$1"
+    SESSION_START=$(date +%s)
+    SESSION_LOG="$SESIONES_DIR/$(date '+%Y-%m-%d')_${mode}.txt"
+    mkdir -p "$SESIONES_DIR"
+    echo "=== Sesión $mode - $(date '+%Y-%m-%d %H:%M') ===" >> "$SESSION_LOG"
+}
+
+end_session() {
+    local mode="$1"
+    local end_time
+    end_time=$(date +%s)
+    local duration_min=$(( (end_time - SESSION_START) / 60 ))
+    [ "$duration_min" -lt 1 ] && duration_min=1
+
+    echo "" >> "$SESSION_LOG"
+    echo "=== Fin de sesión: ${duration_min} minutos ===" >> "$SESSION_LOG"
+
+    # Actualizar progreso
+    local today
+    today=$(date '+%Y-%m-%d')
+    local tmp
+    tmp=$(mktemp)
+
+    jq --arg mode "$mode" \
+       --arg today "$today" \
+       --argjson mins "$duration_min" \
+       '
+       .stats.tiempo_total_minutos += $mins |
+       .stats["sesiones_" + $mode] += 1 |
+       (if .stats.ultimo_dia != $today then .stats.dias_totales += 1 else . end) |
+       .stats.ultimo_dia = $today
+       ' "$PROGRESO_FILE" > "$tmp" && mv "$tmp" "$PROGRESO_FILE"
+
+    echo ""
+    echo -e "${GREEN}Sesión terminada: ${duration_min} minutos${NC}"
+    echo -e "${DIM}Log guardado en: $SESSION_LOG${NC}"
+}
+
+speak() {
+    # Hablar texto en inglés
+    local text="$1"
+    local slow="${2:-false}"
+    if [ "$slow" = "true" ]; then
+        hablar -s "$text"
+    else
+        hablar "$text"
+    fi
+}
+
+LAST_RECORDING=""
+REPLAY_TEXT=""
+
+record_voice() {
+    # Grabar voz del usuario y transcribir
+    # Resultado queda en variable global LAST_RECORDING (evita problemas de subshell)
+    # Si REPLAY_TEXT tiene valor, 'r' repite el audio antes de grabar
+    LAST_RECORDING=""
+
+    echo ""
+    if [ -n "$REPLAY_TEXT" ]; then
+        echo -e "${BOLD}${YELLOW}  >>> ENTER = grabar | r = repetir audio <<<${NC}"
+    else
+        echo -e "${BOLD}${YELLOW}  >>> Presiona ENTER para empezar a grabar <<<${NC}"
+    fi
+
+    # Loop para permitir repetir audio
+    while true; do
+        local key=""
+        read -r key </dev/tty
+        if [ "$key" = "r" ] || [ "$key" = "R" ]; then
+            if [ -n "$REPLAY_TEXT" ]; then
+                speak "$REPLAY_TEXT" "true"
+                echo -e "${BOLD}${YELLOW}  >>> ENTER = grabar | r = repetir audio <<<${NC}"
+            fi
+        else
+            break
+        fi
+    done
+
+    # Iniciar grabación
+    rm -f "$AUDIOFILE"
+    pw-record --rate=16000 --channels=1 --format=s16 "$AUDIOFILE" </dev/null &>/dev/null &
+    local rec_pid=$!
+
+    sleep 0.3
+    if ! kill -0 "$rec_pid" 2>/dev/null; then
+        echo -e "${RED}  Error al iniciar grabación${NC}"
+        return 1
+    fi
+
+    echo -e "${BOLD}${RED}  ● GRABANDO... habla ahora... ENTER para parar ●${NC}"
+    read -r -s </dev/tty
+
+    kill -INT "$rec_pid" 2>/dev/null || true
+    wait "$rec_pid" 2>/dev/null || true
+    sleep 0.3
+
+    if [ ! -s "$AUDIOFILE" ]; then
+        echo -e "${RED}  No se capturó audio${NC}"
+        return 1
+    fi
+
+    # Transcribir con Whisper
+    echo -e "${DIM}  Transcribiendo...${NC}"
+    local response
+    response=$(curl -s --max-time 30 \
+        https://api.openai.com/v1/audio/transcriptions \
+        -H "Authorization: Bearer $OPENAI_API_KEY" \
+        -F file="@$AUDIOFILE" \
+        -F model="whisper-1" \
+        -F language="en" \
+        -F response_format="json")
+
+    LAST_RECORDING=$(echo "$response" | jq -r '.text // empty')
+    rm -f "$AUDIOFILE"
+
+    if [ -z "$LAST_RECORDING" ]; then
+        echo -e "${RED}  No se pudo transcribir${NC}"
+        return 1
+    fi
+
+    echo -e "${GREEN}  Transcrito: ${NC}$LAST_RECORDING"
+    return 0
+}
+
+call_gpt() {
+    # Llamar a GPT-4o-mini con un prompt
+    local system_msg="$1"
+    local user_msg="$2"
+
+    local response
+    response=$(curl -s --max-time 30 \
+        https://api.openai.com/v1/chat/completions \
+        -H "Authorization: Bearer $OPENAI_API_KEY" \
+        -H "Content-Type: application/json" \
+        -d "$(jq -n \
+            --arg sys "$system_msg" \
+            --arg usr "$user_msg" \
+            '{
+                model: "gpt-4o-mini",
+                messages: [
+                    {role: "system", content: $sys},
+                    {role: "user", content: $usr}
+                ],
+                max_tokens: 500,
+                temperature: 0.7
+            }')")
+
+    echo "$response" | jq -r '.choices[0].message.content // empty'
+}
+
+call_gpt_conversation() {
+    # Llamar GPT con historial de conversación (JSON array de mensajes)
+    local messages_json="$1"
+
+    local response
+    response=$(curl -s --max-time 30 \
+        https://api.openai.com/v1/chat/completions \
+        -H "Authorization: Bearer $OPENAI_API_KEY" \
+        -H "Content-Type: application/json" \
+        -d "$(jq -n \
+            --argjson msgs "$messages_json" \
+            '{
+                model: "gpt-4o-mini",
+                messages: $msgs,
+                max_tokens: 500,
+                temperature: 0.7
+            }')")
+
+    echo "$response" | jq -r '.choices[0].message.content // empty'
+}
+
+save_error() {
+    # Guardar un error en el journal con campos de repetición espaciada (SM-2 simplificado)
+    # interval: días hasta próxima revisión
+    # ease: factor multiplicador (1.3 mínimo, 2.5 máximo)
+    # next_review: fecha de próxima revisión
+    local original="$1"
+    local user_said="$2"
+    local correction="$3"
+    local mode="$4"
+
+    local today
+    today=$(date '+%Y-%m-%d')
+    local tomorrow
+    tomorrow=$(date -d '+1 day' '+%Y-%m-%d')
+
+    # Verificar si ya existe este error (misma frase original)
+    local exists
+    exists=$(jq --arg orig "$original" '[.errores[] | select(.original == $orig)] | length' "$ERRORES_FILE")
+
+    local tmp
+    tmp=$(mktemp)
+    if [ "$exists" -gt 0 ]; then
+        # Ya existe: resetear intervalo (falló de nuevo)
+        jq --arg orig "$original" \
+           --arg user "$user_said" \
+           --arg today "$today" \
+           --arg tomorrow "$tomorrow" \
+           '(.errores[] | select(.original == $orig)) |=
+               (.user_said = $user |
+                .date = $today |
+                .interval = 1 |
+                .ease = (if .ease then ([.ease - 0.2, 1.3] | max) else 1.5 end) |
+                .next_review = $tomorrow |
+                .fail_count = ((.fail_count // 0) + 1))
+           ' "$ERRORES_FILE" > "$tmp" && mv "$tmp" "$ERRORES_FILE"
+    else
+        # Nuevo error
+        jq --arg orig "$original" \
+           --arg user "$user_said" \
+           --arg corr "$correction" \
+           --arg mode "$mode" \
+           --arg today "$today" \
+           --arg tomorrow "$tomorrow" \
+           '.errores += [{
+               original: $orig,
+               user_said: $user,
+               correction: $corr,
+               mode: $mode,
+               date: $today,
+               next_review: $tomorrow,
+               interval: 1,
+               ease: 1.5,
+               review_count: 0,
+               fail_count: 1
+           }]' "$ERRORES_FILE" > "$tmp" && mv "$tmp" "$ERRORES_FILE"
+    fi
+}
+
+mark_error_correct() {
+    # Marcar un error como acertado: aumentar intervalo según SM-2
+    local original="$1"
+
+    local today
+    today=$(date '+%Y-%m-%d')
+
+    local tmp
+    tmp=$(mktemp)
+    jq --arg orig "$original" \
+       --arg today "$today" \
+       '(.errores[] | select(.original == $orig)) |=
+           (.review_count += 1 |
+            .ease = (if .ease then ([.ease + 0.1, 2.5] | min) else 1.6 end) |
+            .interval = (if .interval then ([(.interval * .ease) | floor, 30] | min) else 2 end) |
+            .next_review = ($today | strptime("%Y-%m-%d") | mktime + (.interval * 86400) | strftime("%Y-%m-%d")))
+       ' "$ERRORES_FILE" > "$tmp" && mv "$tmp" "$ERRORES_FILE"
+}
+
+get_level() {
+    jq -r '.nivel // "B1"' "$PROGRESO_FILE"
+}
+
+# === MODO EVALUACIÓN ===
+
+mode_eval() {
+    echo ""
+    echo -e "${BOLD}${CYAN}═══════════════════════════════════════${NC}"
+    echo -e "${BOLD}${CYAN}  Evaluación de Nivel de Inglés${NC}"
+    echo -e "${BOLD}${CYAN}═══════════════════════════════════════${NC}"
+    echo ""
+    echo -e "Vamos a evaluar tu nivel con 3 pruebas rápidas:"
+    echo -e "  1. ${BOLD}Listening${NC} - Escuchar y repetir frases"
+    echo -e "  2. ${BOLD}Grammar${NC}  - Corregir errores"
+    echo -e "  3. ${BOLD}Speaking${NC} - Responder preguntas"
+    echo ""
+    echo -e "${DIM}Cada prueba tiene frases de dificultad creciente.${NC}"
+    echo -e "${DIM}Presiona ENTER para comenzar...${NC}"
+    read -r
+
+    local total_score=0
+    local max_score=0
+
+    # --- PARTE 1: LISTENING ---
+    echo ""
+    echo -e "${BOLD}${BLUE}── Parte 1: Listening ──${NC}"
+    echo -e "Escucha la frase y repítela lo más exacto posible."
+    echo ""
+
+    local listening_phrases=(
+        "I need to go to the store."
+        "She has been working here for three years."
+        "If I had known about the problem, I would have fixed it."
+        "The project is supposed to be delivered by next Friday."
+        "Had it not been for your help, we wouldn't have succeeded."
+    )
+    local listening_levels=("A2" "B1" "B2" "B2" "C1")
+    local listening_points=(1 2 3 4 5)
+    local listening_score=0
+
+    for i in "${!listening_phrases[@]}"; do
+        local phrase="${listening_phrases[$i]}"
+        local level="${listening_levels[$i]}"
+        local points="${listening_points[$i]}"
+        max_score=$((max_score + points))
+
+        echo -e "${DIM}  Frase $((i+1))/5 (${level})${NC}"
+        speak "$phrase"
+
+        REPLAY_TEXT="$phrase"
+        local user_text
+        record_voice || true
+        user_text="$LAST_RECORDING"
+        if [ -z "$user_text" ]; then
+            echo -e "${RED}  (sin respuesta)${NC}"
+            continue
+        fi
+
+        # GPT evalúa similitud
+        local eval_result
+        eval_result=$(call_gpt \
+            "You are evaluating English pronunciation/listening. Compare what the student said with the original phrase. Score 0-100 for accuracy. Respond ONLY with a JSON: {\"score\": N, \"feedback\": \"brief note\"}" \
+            "Original: \"$phrase\" | Student said: \"$user_text\"")
+
+        local score
+        score=$(echo "$eval_result" | jq -r '.score // 50' 2>/dev/null || echo "50")
+        if [ "$score" -ge 80 ]; then
+            echo -e "${GREEN}  ✓ Bien ($score%) ${NC}"
+            listening_score=$((listening_score + points))
+        elif [ "$score" -ge 50 ]; then
+            echo -e "${YELLOW}  ~ Regular ($score%)${NC}"
+            listening_score=$((listening_score + points / 2))
+        else
+            echo -e "${RED}  ✗ ($score%)${NC}"
+        fi
+        local feedback
+        feedback=$(echo "$eval_result" | jq -r '.feedback // ""' 2>/dev/null)
+        [ -n "$feedback" ] && echo -e "${DIM}  $feedback${NC}"
+        echo ""
+    done
+    total_score=$((total_score + listening_score))
+
+    # --- PARTE 2: GRAMMAR ---
+    echo -e "${BOLD}${BLUE}── Parte 2: Grammar ──${NC}"
+    echo -e "Corrige los errores en estas frases (responde por voz)."
+    echo ""
+
+    local grammar_wrong=(
+        "She have two brothers."
+        "I have 25 years old."
+        "He said me that he was tired."
+        "If I would have known, I would have come."
+        "The committee have decided that the proposal should be revised."
+    )
+    local grammar_correct=(
+        "She has two brothers."
+        "I am 25 years old."
+        "He told me that he was tired."
+        "If I had known, I would have come."
+        "The committee has decided that the proposal should be revised."
+    )
+    local grammar_levels=("A2" "B1" "B1" "B2" "C1")
+    local grammar_points=(1 2 3 4 5)
+    local grammar_score=0
+
+    for i in "${!grammar_wrong[@]}"; do
+        local wrong="${grammar_wrong[$i]}"
+        local correct="${grammar_correct[$i]}"
+        local level="${grammar_levels[$i]}"
+        local points="${grammar_points[$i]}"
+        max_score=$((max_score + points))
+
+        echo -e "  ${BOLD}Corrige:${NC} \"$wrong\"  ${DIM}(${level})${NC}"
+        speak "$wrong"
+
+        REPLAY_TEXT="$wrong"
+        record_voice || true
+        local user_text="$LAST_RECORDING"
+        if [ -z "$user_text" ]; then
+            echo -e "${RED}  (sin respuesta)${NC}"
+            echo -e "${GREEN}  Correcto: $correct${NC}"
+            echo ""
+            continue
+        fi
+
+        local eval_result
+        eval_result=$(call_gpt \
+            "Compare the student's correction with the expected answer. Score 0-100. Respond ONLY with JSON: {\"score\": N, \"correct\": true/false}" \
+            "Wrong: \"$wrong\" | Student said: \"$user_text\" | Expected: \"$correct\"")
+
+        local correct_bool
+        correct_bool=$(echo "$eval_result" | jq -r '.correct // false' 2>/dev/null || echo "false")
+        if [ "$correct_bool" = "true" ]; then
+            echo -e "${GREEN}  ✓ Correcto${NC}"
+            grammar_score=$((grammar_score + points))
+        else
+            echo -e "${RED}  ✗ Respuesta esperada: ${NC}$correct"
+        fi
+        echo ""
+    done
+    total_score=$((total_score + grammar_score))
+
+    # --- PARTE 3: SPEAKING ---
+    echo -e "${BOLD}${BLUE}── Parte 3: Speaking ──${NC}"
+    echo -e "Responde estas preguntas en inglés."
+    echo ""
+
+    local speaking_questions=(
+        "What do you do for a living?"
+        "Tell me about something interesting that happened to you recently."
+        "What would you do if you won the lottery?"
+    )
+    local speaking_points=(3 5 7)
+    local speaking_score=0
+
+    for i in "${!speaking_questions[@]}"; do
+        local question="${speaking_questions[$i]}"
+        local points="${speaking_points[$i]}"
+        max_score=$((max_score + points))
+
+        echo -e "  ${BOLD}$question${NC}"
+        speak "$question"
+
+        REPLAY_TEXT="$question"
+        record_voice || true
+        local user_text="$LAST_RECORDING"
+        if [ -z "$user_text" ]; then
+            echo -e "${RED}  (sin respuesta)${NC}"
+            echo ""
+            continue
+        fi
+
+        local eval_result
+        eval_result=$(call_gpt \
+            "Evaluate this English speaking response. Consider grammar, vocabulary, fluency, and appropriateness. Score 0-100. Respond ONLY with JSON: {\"score\": N, \"level\": \"A2/B1/B2/C1\", \"feedback\": \"brief note in Spanish\"}" \
+            "Question: \"$question\" | Student response: \"$user_text\"")
+
+        local score
+        score=$(echo "$eval_result" | jq -r '.score // 50' 2>/dev/null || echo "50")
+        local level_est
+        level_est=$(echo "$eval_result" | jq -r '.level // "B1"' 2>/dev/null || echo "B1")
+
+        if [ "$score" -ge 70 ]; then
+            speaking_score=$((speaking_score + points))
+            echo -e "${GREEN}  ✓ Buen nivel ($level_est)${NC}"
+        elif [ "$score" -ge 40 ]; then
+            speaking_score=$((speaking_score + points / 2))
+            echo -e "${YELLOW}  ~ Aceptable ($level_est)${NC}"
+        else
+            echo -e "${RED}  ✗ Necesita práctica${NC}"
+        fi
+        local feedback
+        feedback=$(echo "$eval_result" | jq -r '.feedback // ""' 2>/dev/null)
+        [ -n "$feedback" ] && echo -e "${DIM}  $feedback${NC}"
+        echo ""
+    done
+    total_score=$((total_score + speaking_score))
+
+    # --- RESULTADO FINAL ---
+    local percentage=$((total_score * 100 / max_score))
+    local final_level="B1"
+    if [ "$percentage" -ge 85 ]; then
+        final_level="C1"
+    elif [ "$percentage" -ge 65 ]; then
+        final_level="B2"
+    elif [ "$percentage" -ge 40 ]; then
+        final_level="B1"
+    else
+        final_level="A2"
+    fi
+
+    echo ""
+    echo -e "${BOLD}${CYAN}═══════════════════════════════════════${NC}"
+    echo -e "${BOLD}  Resultado de la Evaluación${NC}"
+    echo -e "${BOLD}${CYAN}═══════════════════════════════════════${NC}"
+    echo ""
+    echo -e "  Listening:  $listening_score / $(echo "${listening_points[@]}" | tr ' ' '+' | bc)"
+    echo -e "  Grammar:    $grammar_score / $(echo "${grammar_points[@]}" | tr ' ' '+' | bc)"
+    echo -e "  Speaking:   $speaking_score / $(echo "${speaking_points[@]}" | tr ' ' '+' | bc)"
+    echo -e "  ${BOLD}Total:      $total_score / $max_score ($percentage%)${NC}"
+    echo ""
+    echo -e "  ${BOLD}Nivel estimado: ${CYAN}$final_level${NC}"
+    echo ""
+
+    # Guardar resultado
+    local tmp
+    tmp=$(mktemp)
+    jq --arg level "$final_level" \
+       --argjson score "$total_score" \
+       --argjson max "$max_score" \
+       --argjson pct "$percentage" \
+       --arg date "$(date '+%Y-%m-%d')" \
+       --argjson listening "$listening_score" \
+       --argjson grammar "$grammar_score" \
+       --argjson speaking "$speaking_score" \
+       '
+       .nivel = $level |
+       .evaluacion_inicial = {
+           fecha: $date,
+           score: $score,
+           max: $max,
+           porcentaje: $pct,
+           listening: $listening,
+           grammar: $grammar,
+           speaking: $speaking
+       }
+       ' "$PROGRESO_FILE" > "$tmp" && mv "$tmp" "$PROGRESO_FILE"
+
+    echo -e "${DIM}El contenido se ajustará a tu nivel $final_level.${NC}"
+    echo -e "${DIM}Puedes repetir la evaluación con: ingles eval${NC}"
+}
+
+# === MODO SHADOW ===
+
+mode_shadow() {
+    init_session "shadow"
+    local level
+    level=$(get_level)
+
+    echo ""
+    echo -e "${BOLD}${CYAN}═══════════════════════════════════════${NC}"
+    echo -e "${BOLD}${CYAN}  Shadowing (Nivel: $level)${NC}"
+    echo -e "${BOLD}${CYAN}═══════════════════════════════════════${NC}"
+    echo ""
+    echo -e "Escucha la frase y repítela lo más exacto posible."
+    echo -e "${DIM}Ctrl+C para terminar la sesión.${NC}"
+    echo ""
+
+    # Cargar frases del nivel
+    local phrases
+    phrases=$(jq -r --arg level "$level" '.shadow[$level] // .shadow["B1"]' "$MATERIAL_DIR/frases.json")
+    local total
+    total=$(echo "$phrases" | jq 'length')
+    local correct=0
+    local attempted=0
+
+    # Mezclar frases
+    local indices
+    indices=$(seq 0 $((total - 1)) | shuf)
+
+    for idx in $indices; do
+        local phrase
+        phrase=$(echo "$phrases" | jq -r ".[$idx].text")
+        local topic
+        topic=$(echo "$phrases" | jq -r ".[$idx].topic")
+
+        attempted=$((attempted + 1))
+        echo -e "${BOLD}[$attempted] ${DIM}($topic)${NC}"
+        echo -e "${DIM}  Escuchando...${NC}"
+
+        # Primero lento, luego normal
+        speak "$phrase" "true"
+        sleep 0.5
+        speak "$phrase" "false"
+
+        # Grabar respuesta
+        REPLAY_TEXT="$phrase"
+        record_voice || true
+        local user_text="$LAST_RECORDING"
+        if [ -z "$user_text" ]; then
+            echo -e "${RED}  (sin respuesta)${NC}"
+            echo -e "${GREEN}  Original: $phrase${NC}"
+            echo ""
+            echo "  [$attempted] SKIP | $phrase" >> "$SESSION_LOG"
+            continue
+        fi
+
+        echo -e "${DIM}  Original:${NC} $phrase"
+
+        # Comparar
+        local eval_result
+        eval_result=$(call_gpt \
+            "Compare shadowing attempt with original. Check pronunciation accuracy (via transcription match), missing words, and word order. Score 0-100. Respond with JSON only: {\"score\": N, \"missing\": [\"words\"], \"feedback\": \"brief tip in Spanish\"}" \
+            "Original: \"$phrase\" | Student: \"$user_text\"")
+
+        local score
+        score=$(echo "$eval_result" | jq -r '.score // 50' 2>/dev/null || echo "50")
+
+        if [ "$score" -ge 80 ]; then
+            echo -e "${GREEN}  ✓ Excelente ($score%)${NC}"
+            correct=$((correct + 1))
+        elif [ "$score" -ge 60 ]; then
+            echo -e "${YELLOW}  ~ Casi ($score%) - Intenta de nuevo${NC}"
+            local missing
+            missing=$(echo "$eval_result" | jq -r '.missing // [] | join(", ")' 2>/dev/null)
+            [ -n "$missing" ] && echo -e "${YELLOW}    Palabras que faltaron: $missing${NC}"
+            # Repetir una vez más
+            speak "$phrase" "true"
+        else
+            echo -e "${RED}  ✗ Necesita práctica ($score%)${NC}"
+            save_error "$phrase" "$user_text" "" "shadow"
+            speak "$phrase" "true"
+        fi
+
+        local feedback
+        feedback=$(echo "$eval_result" | jq -r '.feedback // ""' 2>/dev/null)
+        [ -n "$feedback" ] && echo -e "${DIM}  $feedback${NC}"
+
+        echo "  [$attempted] $score% | $phrase | $user_text" >> "$SESSION_LOG"
+        echo ""
+    done
+
+    echo ""
+    echo -e "${BOLD}Resultado: $correct/$attempted frases correctas${NC}"
+    end_session "shadow"
+}
+
+# === MODO DICTATION ===
+
+mode_dictation() {
+    init_session "dictation"
+    local level
+    level=$(get_level)
+
+    echo ""
+    echo -e "${BOLD}${CYAN}═══════════════════════════════════════${NC}"
+    echo -e "${BOLD}${CYAN}  Dictation (Nivel: $level)${NC}"
+    echo -e "${BOLD}${CYAN}═══════════════════════════════════════${NC}"
+    echo ""
+    echo -e "Escucha la frase y repítela exactamente como la escuchaste."
+    echo -e "${DIM}Ctrl+C para terminar la sesión.${NC}"
+    echo ""
+
+    local phrases
+    phrases=$(jq -r --arg level "$level" '.dictation[$level] // .dictation["B1"]' "$MATERIAL_DIR/frases.json")
+    local total
+    total=$(echo "$phrases" | jq 'length')
+    local correct=0
+    local attempted=0
+
+    local indices
+    indices=$(seq 0 $((total - 1)) | shuf)
+
+    for idx in $indices; do
+        local phrase
+        phrase=$(echo "$phrases" | jq -r ".[$idx].text")
+        local focus
+        focus=$(echo "$phrases" | jq -r ".[$idx].focus")
+
+        attempted=$((attempted + 1))
+        echo -e "${BOLD}[$attempted] ${DIM}(enfoque: $focus)${NC}"
+
+        # Reproducir la frase (2 veces)
+        echo -e "${DIM}  Escucha atentamente...${NC}"
+        speak "$phrase" "false"
+        sleep 1
+        speak "$phrase" "true"
+
+        # El usuario repite por voz lo que escuchó
+        REPLAY_TEXT="$phrase"
+        record_voice || true
+        local user_text="$LAST_RECORDING"
+        if [ -z "$user_text" ]; then
+            echo -e "${RED}  (sin respuesta)${NC}"
+            echo -e "${GREEN}  Frase: $phrase${NC}"
+            echo ""
+            continue
+        fi
+
+        echo -e "${DIM}  Original: ${NC}$phrase"
+
+        # Comparar palabra por palabra
+        local eval_result
+        eval_result=$(call_gpt \
+            "Compare dictation attempt word-by-word with original. Identify missing, wrong, or extra words. Score 0-100. Respond with JSON only: {\"score\": N, \"wrong_words\": [{\"heard\": \"X\", \"correct\": \"Y\"}], \"feedback\": \"brief note in Spanish\"}" \
+            "Original: \"$phrase\" | Student heard: \"$user_text\"")
+
+        local score
+        score=$(echo "$eval_result" | jq -r '.score // 50' 2>/dev/null || echo "50")
+
+        if [ "$score" -ge 90 ]; then
+            echo -e "${GREEN}  ✓ Perfecto ($score%)${NC}"
+            correct=$((correct + 1))
+        elif [ "$score" -ge 70 ]; then
+            echo -e "${YELLOW}  ~ Casi ($score%)${NC}"
+            correct=$((correct + 1))
+        else
+            echo -e "${RED}  ✗ ($score%)${NC}"
+            save_error "$phrase" "$user_text" "" "dictation"
+        fi
+
+        # Mostrar palabras erradas
+        local wrong_words
+        wrong_words=$(echo "$eval_result" | jq -r '.wrong_words // [] | .[] | "    \(.heard) → \(.correct)"' 2>/dev/null)
+        [ -n "$wrong_words" ] && echo -e "${YELLOW}  Correcciones:\n$wrong_words${NC}"
+
+        local feedback
+        feedback=$(echo "$eval_result" | jq -r '.feedback // ""' 2>/dev/null)
+        [ -n "$feedback" ] && echo -e "${DIM}  $feedback${NC}"
+
+        echo "  [$attempted] $score% | $phrase | $user_text" >> "$SESSION_LOG"
+        echo ""
+    done
+
+    echo ""
+    echo -e "${BOLD}Resultado: $correct/$attempted frases correctas${NC}"
+    end_session "dictation"
+}
+
+# === MODO CHAT ===
+
+mode_chat() {
+    init_session "chat"
+
+    echo ""
+    echo -e "${BOLD}${CYAN}═══════════════════════════════════════${NC}"
+    echo -e "${BOLD}${CYAN}  English Conversation${NC}"
+    echo -e "${BOLD}${CYAN}═══════════════════════════════════════${NC}"
+    echo ""
+    echo -e "Conversación libre en inglés con correcciones."
+    echo -e "Claude te habla en inglés, te corrige en español."
+    echo -e "${DIM}Escribe 'salir' o Ctrl+C para terminar.${NC}"
+    echo ""
+
+    local level
+    level=$(get_level)
+
+    # Historial de conversación
+    local messages
+    messages=$(jq -n --arg level "$level" '[{
+        role: "system",
+        content: ("You are a friendly English conversation partner and tutor. The student speaks Spanish natively and has " + $level + " level English. RULES:\n1. Speak in English, keep your language at " + $level + " level (slightly above to challenge)\n2. After the student responds, ALWAYS first continue the conversation naturally in English\n3. Then add a line with \"---\" and provide corrections in Spanish if there were grammar/vocabulary errors\n4. Format corrections as: ❌ what they said → ✅ correct form (explanation in Spanish)\n5. If they said something well, compliment it briefly\n6. Ask follow-up questions to keep the conversation going\n7. Keep responses conversational, not too long\n8. Start by greeting and asking a casual question")
+    }]')
+
+    # Primera pregunta de Claude
+    local reply
+    reply=$(call_gpt_conversation "$messages")
+
+    while true; do
+        echo ""
+        # Separar la parte en inglés de las correcciones
+        local english_part
+        english_part=$(echo "$reply" | sed '/^---$/,$d')
+        local correction_part
+        correction_part=$(echo "$reply" | sed -n '/^---$/,$ p' | tail -n +2)
+
+        echo -e "${CYAN}  Claude: ${NC}$english_part"
+        if [ -n "$correction_part" ]; then
+            echo -e "${DIM}  ──────${NC}"
+            echo -e "${YELLOW}  $correction_part${NC}"
+        fi
+
+        # TTS solo la parte en inglés
+        speak "$english_part"
+
+        # Agregar respuesta al historial
+        messages=$(echo "$messages" | jq --arg reply "$reply" '. + [{role: "assistant", content: $reply}]')
+
+        echo ""
+
+        # Grabar respuesta del usuario
+        REPLAY_TEXT=""
+        record_voice || true
+        local user_text="$LAST_RECORDING"
+        if [ -z "$user_text" ]; then
+            echo -e "${DIM}  (sin respuesta, intenta de nuevo o Ctrl+C para salir)${NC}"
+            continue
+        fi
+
+        echo -e "${BLUE}  Tú: ${NC}$user_text"
+        echo "" >> "$SESSION_LOG"
+        echo "Claude: $english_part" >> "$SESSION_LOG"
+        echo "User: $user_text" >> "$SESSION_LOG"
+        [ -n "$correction_part" ] && echo "Corrections: $correction_part" >> "$SESSION_LOG"
+
+        # Agregar al historial y obtener respuesta
+        messages=$(echo "$messages" | jq --arg text "$user_text" '. + [{role: "user", content: $text}]')
+
+        # Limitar historial a últimos 20 mensajes (+ system)
+        messages=$(echo "$messages" | jq 'if length > 21 then [.[0]] + .[-20:] else . end')
+
+        echo -e "${DIM}  ...${NC}"
+        reply=$(call_gpt_conversation "$messages")
+
+        if [ -z "$reply" ]; then
+            echo -e "${RED}  Error de conexión. Intenta de nuevo.${NC}"
+            # Quitar último mensaje del usuario para reintentar
+            messages=$(echo "$messages" | jq '.[:-1]')
+        fi
+    done
+}
+
+# === MODO GRAMMAR ===
+
+LAST_EXERCISE_RESULT=""
+
+do_grammar_exercise() {
+    # Ejecutar un ejercicio individual de gramática
+    # Resultado queda en LAST_EXERCISE_RESULT ("OK", "FAIL", "SKIP")
+    LAST_EXERCISE_RESULT="FAIL"
+    local wrong="$1"
+    local correct_answer="$2"
+    local rule="$3"
+    local ex_text="$4"
+    local ex_answer="$5"
+    local source="$6"
+    local num="$7"
+
+    local source_label=""
+    if [ "$source" = "review" ]; then
+        source_label="${YELLOW}REPASO${NC}"
+    else
+        source_label="${BLUE}NUEVO${NC}"
+    fi
+
+    # ─── ENCABEZADO ───
+    echo -e "${DIM}───────────────────────────────────────${NC}"
+    echo -e "${BOLD}  [$num] ${source_label}${NC}"
+    echo ""
+
+    # ─── REGLA ───
+    echo -e "${RED}  Incorrecto: ${NC}$wrong"
+    echo -e "${GREEN}  Correcto:   ${NC}$correct_answer"
+    echo -e "${DIM}  Regla: $rule${NC}"
+    echo ""
+
+    # ─── EJERCICIO ───
+    echo -e "${BOLD}  Ejercicio: ${NC}$ex_text"
+    speak "$ex_text"
+
+    REPLAY_TEXT="$ex_text"
+    record_voice || true
+    local user_text="$LAST_RECORDING"
+
+    if [ -z "$user_text" ]; then
+        echo ""
+        echo -e "${RED}  (sin respuesta)${NC}"
+        echo -e "${GREEN}  Respuesta correcta: $ex_answer${NC}"
+        LAST_EXERCISE_RESULT="SKIP"
+        echo ""
+        echo -e "${DIM}  ENTER para siguiente ejercicio...${NC}"
+        read -r </dev/tty
+        return
+    fi
+
+    # ─── EVALUACIÓN ───
+    echo -e "${DIM}  Evaluando...${NC}"
+    local eval_result
+    eval_result=$(call_gpt \
+        "Check if the student's answer matches the expected answer for this grammar exercise. Be lenient with minor phrasing differences but strict on the grammar point being tested. Respond with JSON only: {\"correct\": true/false, \"feedback\": \"brief explanation in Spanish of what was wrong or right\"}" \
+        "Exercise: \"$ex_text\" | Expected: \"$ex_answer\" | Student: \"$user_text\"")
+
+    local is_correct
+    is_correct=$(echo "$eval_result" | jq -r '.correct // false' 2>/dev/null || echo "false")
+    local feedback
+    feedback=$(echo "$eval_result" | jq -r '.feedback // ""' 2>/dev/null)
+
+    # ─── RESULTADO ───
+    echo ""
+    if [ "$is_correct" = "true" ]; then
+        echo -e "${GREEN}  ✓ CORRECTO${NC}"
+        echo ""
+        echo -e "${DIM}  Tú dijiste:  ${NC}$user_text"
+        echo -e "${DIM}  Esperado:    ${NC}$ex_answer"
+        if [ -n "$feedback" ]; then
+            echo ""
+            echo -e "${DIM}  $feedback${NC}"
+        fi
+        if [ "$source" = "review" ]; then
+            mark_error_correct "$ex_text"
+            echo -e "${DIM}  (Próximo repaso en más días)${NC}"
+        fi
+        LAST_EXERCISE_RESULT="OK"
+    else
+        echo -e "${RED}  ✗ INCORRECTO${NC}"
+        echo ""
+        echo -e "${RED}  Tú dijiste:          ${NC}$user_text"
+        echo -e "${GREEN}  Respuesta correcta:  ${NC}$ex_answer"
+        if [ -n "$feedback" ]; then
+            echo ""
+            echo -e "${YELLOW}  Explicación: $feedback${NC}"
+        fi
+        echo ""
+        save_error "$ex_text" "$user_text" "$ex_answer" "grammar"
+        echo -e "${YELLOW}  Ahora repite la forma correcta:${NC}"
+        speak "$correct_answer" "true"
+        REPLAY_TEXT="$correct_answer"
+        record_voice || true
+        LAST_EXERCISE_RESULT="FAIL"
+    fi
+
+    echo "  [$num] $([ "$is_correct" = "true" ] && echo "OK" || echo "FAIL") | $ex_text | $user_text | $ex_answer" >> "$SESSION_LOG"
+
+    # ─── SIEMPRE esperar ENTER antes del siguiente ───
+    echo ""
+    echo -e "${DIM}  ENTER para siguiente ejercicio...${NC}"
+    read -r </dev/tty
+}
+
+mode_grammar() {
+    init_session "grammar"
+
+    echo ""
+    echo -e "${BOLD}${CYAN}═══════════════════════════════════════${NC}"
+    echo -e "${BOLD}${CYAN}  Grammar Practice${NC}"
+    echo -e "${BOLD}${CYAN}═══════════════════════════════════════${NC}"
+    echo ""
+
+    # --- FASE 1: Errores pendientes de repaso (SRS) ---
+    local today
+    today=$(date '+%Y-%m-%d')
+    local due_errors
+    due_errors=$(jq --arg today "$today" \
+        '[.errores[] | select(.next_review != null and .next_review <= $today)]' \
+        "$ERRORES_FILE")
+    local due_count
+    due_count=$(echo "$due_errors" | jq 'length')
+
+    local correct=0
+    local attempted=0
+
+    if [ "$due_count" -gt 0 ]; then
+        echo -e "${YELLOW}${BOLD}  Tenés $due_count error(es) pendientes de repaso${NC}"
+        echo -e "${DIM}  (repetición espaciada — los errores vuelven hasta que los domines)${NC}"
+        echo ""
+
+        # Buscar los ejercicios originales que corresponden a cada error
+        local all_exercises
+        all_exercises=$(jq '.grammar' "$MATERIAL_DIR/errores_hispanohablantes.json")
+
+        for i in $(seq 0 $((due_count - 1))); do
+            local error_original
+            error_original=$(echo "$due_errors" | jq -r ".[$i].original")
+            local error_correction
+            error_correction=$(echo "$due_errors" | jq -r ".[$i].correction")
+            local fail_count
+            fail_count=$(echo "$due_errors" | jq -r ".[$i].fail_count // 1")
+
+            # Buscar el ejercicio completo en el material
+            local match
+            match=$(echo "$all_exercises" | jq --arg ex "$error_original" '[.[] | select(.exercise == $ex)] | .[0] // null')
+
+            local wrong correct_answer rule ex_text ex_answer
+            if [ "$match" != "null" ] && [ -n "$match" ]; then
+                wrong=$(echo "$match" | jq -r '.wrong')
+                correct_answer=$(echo "$match" | jq -r '.correct')
+                rule=$(echo "$match" | jq -r '.rule')
+                ex_text=$(echo "$match" | jq -r '.exercise')
+                ex_answer=$(echo "$match" | jq -r '.answer')
+            else
+                # Error que no viene del material base (por ejemplo de shadow/dictation)
+                wrong="(tu error anterior)"
+                correct_answer="$error_correction"
+                rule="Revisa este error que cometiste anteriormente"
+                ex_text="$error_original"
+                ex_answer="$error_correction"
+            fi
+
+            attempted=$((attempted + 1))
+            echo -e "${DIM}  (fallaste esto $fail_count vez/veces)${NC}"
+            do_grammar_exercise "$wrong" "$correct_answer" "$rule" "$ex_text" "$ex_answer" "review" "$attempted"
+            [ "$LAST_EXERCISE_RESULT" = "OK" ] && correct=$((correct + 1))
+        done
+
+        if [ "$due_count" -gt 0 ]; then
+            echo -e "${BOLD}${CYAN}──── Repaso terminado: $correct/$due_count ────${NC}"
+            echo ""
+        fi
+    else
+        echo -e "${GREEN}  No hay errores pendientes de repaso. ¡Bien!${NC}"
+        echo ""
+    fi
+
+    # --- FASE 2: Ejercicios nuevos mezclados ---
+    echo -e "${BOLD}  Ahora ejercicios nuevos:${NC}"
+    echo -e "${DIM}  Ctrl+C para terminar la sesión.${NC}"
+    echo ""
+
+    local exercises
+    exercises=$(jq '.grammar' "$MATERIAL_DIR/errores_hispanohablantes.json")
+    local total
+    total=$(echo "$exercises" | jq 'length')
+
+    local new_correct=0
+    local new_attempted=0
+
+    # Mezclar ejercicios
+    local indices
+    indices=$(seq 0 $((total - 1)) | shuf)
+
+    for idx in $indices; do
+        local exercise
+        exercise=$(echo "$exercises" | jq ".[$idx]")
+        local wrong
+        wrong=$(echo "$exercise" | jq -r '.wrong')
+        local correct_answer
+        correct_answer=$(echo "$exercise" | jq -r '.correct')
+        local rule
+        rule=$(echo "$exercise" | jq -r '.rule')
+        local ex_text
+        ex_text=$(echo "$exercise" | jq -r '.exercise')
+        local ex_answer
+        ex_answer=$(echo "$exercise" | jq -r '.answer')
+
+        attempted=$((attempted + 1))
+        new_attempted=$((new_attempted + 1))
+
+        do_grammar_exercise "$wrong" "$correct_answer" "$rule" "$ex_text" "$ex_answer" "new" "$attempted"
+        if [ "$LAST_EXERCISE_RESULT" = "OK" ]; then
+            correct=$((correct + 1))
+            new_correct=$((new_correct + 1))
+        fi
+    done
+
+    echo ""
+    echo -e "${BOLD}═══════════════════════════════════════${NC}"
+    echo -e "${BOLD}  Resultado de la sesión:${NC}"
+    if [ "$due_count" -gt 0 ]; then
+        echo -e "    Repaso:  $(echo "$correct - $new_correct" | bc)/$due_count"
+    fi
+    echo -e "    Nuevos:  $new_correct/$new_attempted"
+    echo -e "    ${BOLD}Total:   $correct/$attempted${NC}"
+    echo -e "${BOLD}═══════════════════════════════════════${NC}"
+    end_session "grammar"
+}
+
+# === MENÚ PRINCIPAL ===
+
+show_menu() {
+    # Verificar si necesita evaluación
+    local nivel
+    nivel=$(jq -r '.nivel // empty' "$PROGRESO_FILE")
+
+    if [ -z "$nivel" ]; then
+        echo ""
+        echo -e "${YELLOW}Primera vez! Vamos a evaluar tu nivel de inglés.${NC}"
+        echo -e "${DIM}Presiona ENTER para comenzar la evaluación...${NC}"
+        read -r
+        mode_eval
+        return
+    fi
+
+    local stats
+    stats=$(jq '.stats' "$PROGRESO_FILE")
+    local dias
+    dias=$(echo "$stats" | jq '.dias_totales')
+    local tiempo
+    tiempo=$(echo "$stats" | jq '.tiempo_total_minutos')
+
+    echo ""
+    echo -e "${BOLD}${CYAN}═══════════════════════════════════════${NC}"
+    echo -e "${BOLD}${CYAN}  English Practice (Nivel: $nivel)${NC}"
+    echo -e "${BOLD}${CYAN}═══════════════════════════════════════${NC}"
+    echo ""
+    echo -e "${DIM}  $dias días practicados | $tiempo minutos totales${NC}"
+    echo ""
+    echo -e "  ${BOLD}1${NC}) Shadow   - Escuchar y repetir"
+    echo -e "  ${BOLD}2${NC}) Dictation - Escuchar y escribir"
+    echo -e "  ${BOLD}3${NC}) Chat      - Conversación libre"
+    echo -e "  ${BOLD}4${NC}) Grammar   - Ejercicios de gramática"
+    echo -e "  ${BOLD}5${NC}) Eval      - Re-evaluar nivel"
+    echo -e "  ${BOLD}q${NC}) Salir"
+    echo ""
+    echo -n "  Elige modo: "
+
+    read -r choice
+    case "$choice" in
+        1|shadow)    mode_shadow ;;
+        2|dictation) mode_dictation ;;
+        3|chat)      mode_chat ;;
+        4|grammar)   mode_grammar ;;
+        5|eval)      mode_eval ;;
+        q|salir)     echo "Bye!"; exit 0 ;;
+        *)           echo "Opción no válida"; show_menu ;;
+    esac
+}
+
+# === CLEANUP ===
+cleanup() {
+    rm -f "$AUDIOFILE" "$PIDFILE"
+    if [ -n "$SESSION_START" ]; then
+        local mode="${1:-unknown}"
+        end_session "$mode" 2>/dev/null || true
+    fi
+    echo ""
+    exit 0
+}
+
+# === MAIN ===
+
+# Verificar dependencias
+for cmd in jq hablar pw-record curl ffplay; do
+    if ! command -v "$cmd" &>/dev/null; then
+        echo "Error: '$cmd' no está instalado"
+        exit 1
+    fi
+done
+
+# Crear directorios si no existen
+mkdir -p "$DATA_DIR/sesiones" "$DATA_DIR/vocabulario"
+
+# Inicializar archivos si no existen
+[ ! -f "$PROGRESO_FILE" ] && echo '{"nivel":null,"evaluacion_inicial":null,"stats":{"dias_totales":0,"tiempo_total_minutos":0,"sesiones_shadow":0,"sesiones_dictation":0,"sesiones_chat":0,"sesiones_grammar":0,"ultimo_dia":null},"scores":{"shadow":[],"dictation":[],"grammar":[]}}' > "$PROGRESO_FILE"
+[ ! -f "$ERRORES_FILE" ] && echo '{"errores":[]}' > "$ERRORES_FILE"
+
+# Manejar señal de interrupción
+trap 'cleanup "$MODE"' INT TERM
+
+MODE="${1:-menu}"
+
+case "$MODE" in
+    eval)      mode_eval ;;
+    shadow)    mode_shadow ;;
+    dictation) mode_dictation ;;
+    chat)      mode_chat ;;
+    grammar)   mode_grammar ;;
+    menu|"")   show_menu ;;
+    *)
+        echo "Uso: ingles [eval|shadow|dictation|chat|grammar]"
+        echo ""
+        echo "Modos:"
+        echo "  eval      - Evaluación de nivel"
+        echo "  shadow    - Shadowing (escuchar y repetir)"
+        echo "  dictation - Dictado"
+        echo "  chat      - Conversación libre con correcciones"
+        echo "  grammar   - Ejercicios de gramática"
+        exit 1
+        ;;
+esac

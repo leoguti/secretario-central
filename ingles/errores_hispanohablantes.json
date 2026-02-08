@@ -1,0 +1,203 @@
+{
+  "grammar": [
+    {
+      "id": "age",
+      "wrong": "I have 30 years",
+      "correct": "I am 30 years old",
+      "rule": "En inglés la edad usa 'to be', no 'to have'",
+      "exercise": "Traduce: Ella tiene 25 años",
+      "answer": "She is 25 years old"
+    },
+    {
+      "id": "make_do",
+      "wrong": "I need to make my homework",
+      "correct": "I need to do my homework",
+      "rule": "DO = tareas, actividades abstractas. MAKE = crear, producir algo",
+      "exercise": "Completa: Can you ___ me a favor?",
+      "answer": "do"
+    },
+    {
+      "id": "say_tell",
+      "wrong": "He said me that he was tired",
+      "correct": "He told me that he was tired",
+      "rule": "TELL + persona. SAY + lo que se dijo (sin persona directa)",
+      "exercise": "Completa: She ___ me the truth",
+      "answer": "told"
+    },
+    {
+      "id": "people_plural",
+      "wrong": "The people is happy",
+      "correct": "The people are happy",
+      "rule": "'People' ya es plural en inglés. No se dice 'peoples' (excepto para pueblos/etnias)",
+      "exercise": "Corrige: Many people thinks this is wrong",
+      "answer": "Many people think this is wrong"
+    },
+    {
+      "id": "missing_subject",
+      "wrong": "Is important to study",
+      "correct": "It is important to study",
+      "rule": "En inglés siempre necesitas un sujeto. Usa 'it' como sujeto expletivo",
+      "exercise": "Corrige: Is raining outside",
+      "answer": "It is raining outside"
+    },
+    {
+      "id": "agree_with",
+      "wrong": "I am agree with you",
+      "correct": "I agree with you",
+      "rule": "'Agree' es verbo en inglés, no adjetivo. No lleva 'to be'",
+      "exercise": "Corrige: She is agree with the plan",
+      "answer": "She agrees with the plan"
+    },
+    {
+      "id": "since_for",
+      "wrong": "I've been living here since five years",
+      "correct": "I've been living here for five years",
+      "rule": "SINCE + momento específico (2020, Monday). FOR + duración (5 years, 3 months)",
+      "exercise": "Completa: I've known him ___ 2019",
+      "answer": "since"
+    },
+    {
+      "id": "actually",
+      "wrong": "Actually I'm working on a project (meaning 'ahora mismo')",
+      "correct": "Currently / Right now I'm working on a project",
+      "rule": "'Actually' = en realidad, de hecho. 'Actualmente' = currently, right now",
+      "exercise": "Traduce: Actualmente vivo en Lima",
+      "answer": "I currently live in Lima / Right now I live in Lima"
+    },
+    {
+      "id": "sensible",
+      "wrong": "She is very sensible (meaning 'sensible')",
+      "correct": "She is very sensitive",
+      "rule": "'Sensible' (EN) = sensato, razonable. 'Sensible' (ES) = sensitive",
+      "exercise": "Traduce: Es una persona muy sensible",
+      "answer": "She is a very sensitive person"
+    },
+    {
+      "id": "preposition_depend",
+      "wrong": "It depends of the weather",
+      "correct": "It depends on the weather",
+      "rule": "'Depend ON', no 'depend of'. Las preposiciones no se traducen literalmente",
+      "exercise": "Completa: The result depends ___ many factors",
+      "answer": "on"
+    },
+    {
+      "id": "assist",
+      "wrong": "I assisted to the meeting",
+      "correct": "I attended the meeting",
+      "rule": "'Assist' = ayudar. 'Asistir' (ir) = attend",
+      "exercise": "Traduce: ¿Asististe a la conferencia?",
+      "answer": "Did you attend the conference?"
+    },
+    {
+      "id": "double_negative",
+      "wrong": "I don't know nothing about it",
+      "correct": "I don't know anything about it",
+      "rule": "En inglés estándar no se usan dobles negativos. nothing→anything con don't",
+      "exercise": "Corrige: She doesn't have no friends here",
+      "answer": "She doesn't have any friends here"
+    },
+    {
+      "id": "in_on_at_time",
+      "wrong": "I'll see you in Monday",
+      "correct": "I'll see you on Monday",
+      "rule": "AT = hora (at 3pm). ON = día/fecha (on Monday). IN = mes/año/periodo (in January)",
+      "exercise": "Completa: The meeting is ___ 10 AM ___ Friday",
+      "answer": "at, on"
+    },
+    {
+      "id": "much_many",
+      "wrong": "There are much people here",
+      "correct": "There are many people here",
+      "rule": "MANY + contable plural. MUCH + incontable. A LOT OF = ambos",
+      "exercise": "Completa: We don't have ___ time left",
+      "answer": "much"
+    },
+    {
+      "id": "look_like",
+      "wrong": "It looks that it's going to rain",
+      "correct": "It looks like it's going to rain",
+      "rule": "'Look like' para parecer. 'Looks that' no existe en inglés",
+      "exercise": "Corrige: She looks that she's tired",
+      "answer": "She looks like she's tired"
+    },
+    {
+      "id": "enjoy_gerund",
+      "wrong": "I enjoy to travel",
+      "correct": "I enjoy traveling",
+      "rule": "Algunos verbos van seguidos de gerundio: enjoy, avoid, consider, finish, suggest",
+      "exercise": "Corrige: She avoids to talk about it",
+      "answer": "She avoids talking about it"
+    },
+    {
+      "id": "remember_gerund_infinitive",
+      "wrong": "I remember to meet you last year (meaning 'recuerdo haberte conocido')",
+      "correct": "I remember meeting you last year",
+      "rule": "Remember + gerund = recordar algo pasado. Remember + to = acordarse de hacer algo futuro",
+      "exercise": "Completa: Don't forget ___ (lock) the door",
+      "answer": "to lock"
+    },
+    {
+      "id": "explain_to",
+      "wrong": "Can you explain me this?",
+      "correct": "Can you explain this to me?",
+      "rule": "'Explain something TO someone', no 'explain someone something'",
+      "exercise": "Corrige: She explained us the situation",
+      "answer": "She explained the situation to us"
+    },
+    {
+      "id": "go_to_home",
+      "wrong": "I want to go to home",
+      "correct": "I want to go home",
+      "rule": "'Home' funciona como adverbio con verbos de movimiento. No lleva 'to'",
+      "exercise": "Corrige: Let's go to home early today",
+      "answer": "Let's go home early today"
+    },
+    {
+      "id": "the_general",
+      "wrong": "The life is beautiful",
+      "correct": "Life is beautiful",
+      "rule": "No se usa 'the' con sustantivos abstractos o generales (life, love, music, science)",
+      "exercise": "Corrige: The education is very important",
+      "answer": "Education is very important"
+    }
+  ],
+  "false_friends": [
+    {"es": "actualmente", "wrong_en": "actually", "correct_en": "currently, right now"},
+    {"es": "sensible", "wrong_en": "sensible", "correct_en": "sensitive"},
+    {"es": "asistir", "wrong_en": "assist", "correct_en": "attend"},
+    {"es": "realizar", "wrong_en": "realize", "correct_en": "carry out, accomplish"},
+    {"es": "éxito", "wrong_en": "exit", "correct_en": "success"},
+    {"es": "embarazada", "wrong_en": "embarrassed", "correct_en": "pregnant"},
+    {"es": "soportar", "wrong_en": "support", "correct_en": "stand, bear, put up with"},
+    {"es": "pretender", "wrong_en": "pretend", "correct_en": "intend, try to"},
+    {"es": "molestar", "wrong_en": "molest", "correct_en": "bother, annoy"},
+    {"es": "constipado", "wrong_en": "constipated", "correct_en": "having a cold"},
+    {"es": "largo", "wrong_en": "large", "correct_en": "long"},
+    {"es": "carpeta", "wrong_en": "carpet", "correct_en": "folder, binder"},
+    {"es": "recordar", "wrong_en": "record", "correct_en": "remember, remind"},
+    {"es": "librería", "wrong_en": "library", "correct_en": "bookstore"},
+    {"es": "introducir", "wrong_en": "introduce", "correct_en": "insert, enter"}
+  ],
+  "phrasal_verbs_work": [
+    {"verb": "come up with", "meaning": "idear, inventar", "example": "We need to come up with a better solution."},
+    {"verb": "figure out", "meaning": "descifrar, entender", "example": "I can't figure out why the code is failing."},
+    {"verb": "look into", "meaning": "investigar", "example": "I'll look into this issue and get back to you."},
+    {"verb": "carry out", "meaning": "realizar, llevar a cabo", "example": "We need to carry out more testing before launch."},
+    {"verb": "set up", "meaning": "configurar, preparar", "example": "Can you set up a meeting for tomorrow?"},
+    {"verb": "follow up", "meaning": "dar seguimiento", "example": "I'll follow up with the client next week."},
+    {"verb": "run into", "meaning": "encontrarse con (problema/persona)", "example": "We ran into some unexpected issues."},
+    {"verb": "point out", "meaning": "señalar", "example": "She pointed out a critical bug in the code."},
+    {"verb": "put off", "meaning": "posponer", "example": "We had to put off the deployment until Monday."},
+    {"verb": "turn out", "meaning": "resultar", "example": "It turned out that the data was corrupted."},
+    {"verb": "break down", "meaning": "desglosar / dejar de funcionar", "example": "Let me break down the costs for you."},
+    {"verb": "bring up", "meaning": "mencionar", "example": "I'd like to bring up an important topic."},
+    {"verb": "go over", "meaning": "revisar", "example": "Let's go over the requirements one more time."},
+    {"verb": "take over", "meaning": "hacerse cargo", "example": "She will take over the project next month."},
+    {"verb": "wrap up", "meaning": "terminar, finalizar", "example": "Let's wrap up this meeting. Any final questions?"},
+    {"verb": "sign off on", "meaning": "aprobar", "example": "The manager needs to sign off on the budget."},
+    {"verb": "roll out", "meaning": "lanzar, implementar", "example": "We're planning to roll out the new feature next sprint."},
+    {"verb": "scale up", "meaning": "escalar, aumentar", "example": "We need to scale up our infrastructure."},
+    {"verb": "hand over", "meaning": "entregar, transferir", "example": "Please hand over the documentation to the new team."},
+    {"verb": "push back", "meaning": "posponer / resistir", "example": "The client pushed back on the timeline."}
+  ]
+}
