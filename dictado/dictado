@@ -7,18 +7,17 @@ set -uo pipefail
 
 PIDFILE="/tmp/dictado-recording.pid"
 AUDIOFILE="/tmp/dictado-audio.wav"
-ENVFILE="$HOME/.config/dictado/.env"
 LOGFILE="/tmp/dictado.log"
 
-# Load API key
-if [ ! -f "$ENVFILE" ]; then
-    notify-send -u critical "Dictado" "No se encontró $ENVFILE"
-    exit 1
+# Load API key: try 1Password first, fallback to .env file
+if command -v op &>/dev/null; then
+    OPENAI_API_KEY=$(op read "op://Private/OpenAI API Key/password" 2>/dev/null || true)
 fi
-source "$ENVFILE"
-
+if [ -z "${OPENAI_API_KEY:-}" ] && [ -f "$HOME/.config/dictado/.env" ]; then
+    source "$HOME/.config/dictado/.env"
+fi
 if [ -z "${OPENAI_API_KEY:-}" ]; then
-    notify-send -u critical "Dictado" "OPENAI_API_KEY no configurada"
+    notify-send -u critical "Dictado" "No se encontró API key (ni en 1Password ni en .env)"
     exit 1
 fi
 
@@ -33,8 +32,14 @@ if [ -f "$PIDFILE" ] && kill -0 "$(cat "$PIDFILE")" 2>/dev/null; then
     kill -INT "$PID" 2>/dev/null || true
     rm -f "$PIDFILE"
 
-    # Wait for ffmpeg to finalize the WAV file properly
-    sleep 1
+    # Wait for pw-record to actually exit and finalize the WAV file
+    for i in $(seq 1 20); do
+        kill -0 "$PID" 2>/dev/null || break
+        sleep 0.2
+    done
+    sleep 0.3
+
+    log "Audio file size: $(stat -c%s "$AUDIOFILE" 2>/dev/null || echo 0) bytes"
 
     # Check audio file exists and has content
     if [ ! -s "$AUDIOFILE" ]; then
@@ -91,15 +96,15 @@ else
     # === START RECORDING ===
     rm -f "$AUDIOFILE" "$PIDFILE"
 
-    # Record from default audio source via PipeWire/PulseAudio (16kHz mono WAV)
-    ffmpeg -y -f pulse -i default -ar 16000 -ac 1 -t 120 "$AUDIOFILE" </dev/null &>/dev/null &
+    # Record using PipeWire native recorder (handles pauses correctly)
+    pw-record --rate=16000 --channels=1 --format=s16 "$AUDIOFILE" </dev/null &>/dev/null &
     RECPID=$!
 
     # Verify recording actually started
-    sleep 0.8
+    sleep 0.5
     if ! kill -0 "$RECPID" 2>/dev/null; then
         notify-send -u critical -t 5000 "Dictado" "Error al iniciar grabación. Verifica micrófono."
-        log "ERROR: ffmpeg recording failed to start"
+        log "ERROR: pw-record failed to start"
         exit 1
     fi
 

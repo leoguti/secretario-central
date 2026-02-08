@@ -18,12 +18,45 @@ bash instalar.sh
 
 Luego cerrar sesion y volver a entrar (para que el grupo `input` surta efecto).
 
+## API key: 1Password (recomendado) o .env
+
+### Opcion A: 1Password (sin archivos .env)
+
+El script lee la key directo de 1Password cada vez. No se guarda nada en disco.
+
+```bash
+# Instalar 1Password CLI
+curl -sS https://downloads.1password.com/linux/keys/1password.asc | \
+  sudo gpg --dearmor --output /usr/share/keyrings/1password-archive-keyring.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/1password-archive-keyring.gpg] https://downloads.1password.com/linux/debian/$(dpkg --print-architecture) stable main" | \
+  sudo tee /etc/apt/sources.list.d/1password-cli.list
+sudo apt update && sudo apt install -y 1password-cli
+
+# Configurar cuenta
+eval $(op signin)
+
+# Guardar la API key en 1Password
+op item create --category Password --title "OpenAI API Key" 'password=sk-proj-TU_KEY_AQUI'
+```
+
+Ventaja: cambias la key en 1Password y funciona en todas tus maquinas.
+
+### Opcion B: Archivo .env (fallback)
+
+```bash
+mkdir -p ~/.config/dictado
+echo 'OPENAI_API_KEY="sk-proj-TU_KEY_AQUI"' > ~/.config/dictado/.env
+chmod 600 ~/.config/dictado/.env
+```
+
+El script intenta 1Password primero. Si no esta disponible, usa el .env.
+
 ## Instalacion manual
 
 ### 1. Paquetes
 
 ```bash
-sudo apt install -y ffmpeg curl jq wl-clipboard ydotool ydotoold libnotify-bin
+sudo apt install -y pipewire curl jq wl-clipboard ydotool ydotoold libnotify-bin
 ```
 
 ### 2. ydotoold (daemon para escribir en Wayland)
@@ -61,15 +94,7 @@ cp dictado ~/.local/bin/dictado
 chmod +x ~/.local/bin/dictado
 ```
 
-### 5. API key
-
-```bash
-mkdir -p ~/.config/dictado
-echo 'OPENAI_API_KEY="sk-proj-TU_KEY_AQUI"' > ~/.config/dictado/.env
-chmod 600 ~/.config/dictado/.env
-```
-
-### 6. Hotkey F9 en GNOME
+### 5. Hotkey F9 en GNOME
 
 ```bash
 gsettings set org.gnome.settings-daemon.plugins.media-keys custom-keybindings \
@@ -95,15 +120,17 @@ Si ydotool no funciona (antes de re-login), el texto queda en el portapapeles â†
 | Archivo | Descripcion |
 |---|---|
 | `~/.local/bin/dictado` | Script principal |
-| `~/.config/dictado/.env` | API key (permisos 600) |
+| `op://Private/OpenAI API Key/password` | API key en 1Password |
+| `~/.config/dictado/.env` | API key fallback (opcional) |
 | `/etc/udev/rules.d/80-uinput.rules` | Permisos uinput |
 | `/etc/systemd/system/ydotoold.service` | Daemon ydotool |
 | `/tmp/dictado.log` | Log de sesion |
 
 ## Notas tecnicas
 
-- **ffmpeg -f pulse** en vez de arecord: arecord corta la grabacion en las pausas con PipeWire
-- **kill -INT** para parar ffmpeg: cierra el WAV con headers correctos
+- **pw-record** para grabar: nativo de PipeWire, no se corta en pausas (arecord y ffmpeg si)
+- **kill -INT** para parar pw-record: cierra el WAV con headers correctos
 - **sg input** como wrapper de ydotool: permite usar ydotool sin re-login tras agregar el grupo
-- Grabacion maxima: 2 minutos (configurable con `-t` en ffmpeg)
+- **1Password > .env**: el script intenta `op read` primero, fallback a .env
+- Grabacion maxima: 5 minutos
 - Costo: ~$0.006/minuto de audio (Whisper API)
