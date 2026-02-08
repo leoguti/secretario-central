@@ -61,6 +61,22 @@ process_chunk() {
     [ -z "$original" ] && return
     rm -f "$file"
 
+    # Filter Whisper hallucinations (ghost phrases from silence)
+    local lower
+    lower=$(echo "$original" | tr '[:upper:]' '[:lower:]')
+    case "$lower" in
+        *"thanks for watching"*|*"thank you for watching"*|*"thank you for your attention"*|\
+        *"please subscribe"*|*"like and subscribe"*|*"see you next time"*|*"see you in the next"*|\
+        *"gracias por ver"*|*"suscríbete"*|*"до свидания"*|*"спасибо за внимание"*|\
+        *"ご視聴ありがとう"*|*"チャンネル登録"*|*"谢谢观看"*|*"感谢收看"*|*"请订阅"*|\
+        *"obrigado por assistir"*|*"merci d'avoir regardé"*)
+            return ;;
+    esac
+    # Skip if text is too short or just punctuation/noise
+    if [ "${#original}" -lt 5 ]; then
+        return
+    fi
+
     # 2. Translate + interpret with GPT-4o-mini (fast and cheap)
     local gpt_response
     gpt_response=$(curl -s --max-time 15 \
