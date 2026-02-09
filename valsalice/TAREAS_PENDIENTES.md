@@ -153,4 +153,26 @@ Protect → Settings → Users → [Usuario] → Disable/Remove
 
 ---
 
+## Mejoras Futuras / Compras Pendientes
+
+### Powerbank para Laptop ThinkPad L14
+- [ ] **Comprar INIU 25,000mAh 100W** - Powerbank USB-C PD
+- **Modelo:** INIU B62 25000mAh 100W
+- **Precio:** ~$50 USD
+- **Link:** [Amazon USA](https://www.amazon.com/INIU-Charging-25000mAh-Ultimate-Compatible/dp/B08VDJP7WN)
+- **Uso:** Cargar laptop ThinkPad L14 (~2 cargas completas) + celulares
+- **Specs:** 3 puertos (2 USB-C 100W/45W + 1 USB-A 18W), pantalla digital
+- **Nota:** Aprobado para aviones (<100Wh)
+
+### Load Balancing / Dual WAN
+- [ ] **Comprar adaptador SFP+ a RJ45** para conectar segunda WAN
+- **Puerto disponible:** WAN2 (eth9) o SFP+
+- **Configuración actual:** Solo Failover habilitado, 1 WAN activa
+- **Objetivo:** Activar Load Balancing con segundo ISP
+- **Ruta en UI:** `Network → Settings → Internet → WAN Failover`
+- **Modos disponibles:** Failover Only, Weighted, Latency-based
+- **Firmware actual:** 4.4.6 (ya soporta Load Balancing)
+
+---
+
 *Actualizado: 2026-02-03*

@@ -41,3 +41,61 @@ El ventilador se dispara constantemente sin razón térmica aparente (CPU 25°C,
 - **AMD GPU low power**: `echo 'low' | sudo tee /sys/class/drm/card1/device/power_dpm_force_performance_level`
 
 - Fecha: 2026-01-30
+
+---
+
+## Cámaras UniFi para Valsalice - Portería y Restaurante
+
+### Contexto
+- Valsalice ya tiene infraestructura UniFi (Dream Machine + Switch PoE)
+- Se necesitan 2 cámaras: una para **portería** (techada) y una para **restaurante** (interior)
+- Bookmark antiguo de admin Hotspot UniFi: https://unifi.ui.com (Perfil Chrome 3)
+
+### Infraestructura existente
+- **UDM Pro** (UDM-PRO) — Router + NVR integrado, soporta hasta ~20 cámaras
+- **Switch PoE** — Ya instalado
+- **Disco duro** — Ya instalado en el UDM Pro
+- **Hotspot UniFi** — Admin en https://unifi.ui.com (Perfil Chrome 3)
+
+### Compra realizada (Amazon)
+- **2x UniFi Protect G4 Dome (UVC-G4-DOME)** — 4MP, vandal-resistant, weatherproof, IR LEDs
+- **Vendedor**: Discover Savings (Amazon)
+- **Fecha estimada de llegada**: 8 de febrero 2026
+- **Ubicaciones**: Portería (techada) y Restaurante (interior)
+
+### Specs G4 Dome
+- Resolución: 4MP (2K)
+- PoE estándar (RJ45 normal)
+- Vandal-resistant (IK08) + Weatherproof (IP66)
+- Visión nocturna IR
+- Detección básica de personas y vehículos desde Protect
+- Bitrate: ~5-8 Mbps por cámara (ligera en la red)
+- Compatible 100% con UDM Pro
+
+### Lo que NO tienen las G4 vs G6
+- No tienen AI en la cámara (sin reconocimiento facial ni placas nativo)
+- Si en el futuro se necesita facial/LPR, agregar un **AI Key** (~$99)
+
+### Opciones que se evaluaron (referencia futura)
+
+| Modelo | Resolución | Precio oficial | Amazon |
+|--------|-----------|----------------|--------|
+| G5 Turret Ultra | 2K (4MP) | $129 USD | [Link](https://www.amazon.com/Ubiquiti-G5-Turret-Ultra-UVC-G5-Turret-Ultra/dp/B0CZ9Q8J8C) |
+| G5 Dome Ultra | 2K (4MP) | $129 USD | [Link](https://www.amazon.com/Ubiquiti-G5-Dome-Ultra-UVC-G5-Dome-Ultra/dp/B0CZ6RF6BV) |
+| G6 Turret | 4K (8MP) | $199 USD | [Link](https://www.amazon.com/Ubiquiti-UniFi-Turret-Camera-UVC-G6-Turret-W/dp/B0F81MRNMC) |
+| G6 Dome | 4K (8MP) | $279 USD | [Link](https://www.amazon.com/Ubiquiti-UniFi-Dome-Camera-UVC-G6-Dome-W/dp/B0FJZV8282) |
+
+### Instalación (cuando lleguen)
+1. Montar base en pared/techo con tornillos incluidos
+2. Pasar cable Ethernet (Cat5e o Cat6) desde switch PoE hasta la cámara
+3. Conectar RJ45 — la cámara enciende sola por PoE
+4. Aparece automáticamente en UniFi Protect (UDM Pro) para adoptarla
+5. Configurar zonas de detección, grabación, alertas desde Protect
+
+### Pendiente
+- [ ] Recibir cámaras (llegan 8 de febrero 2026)
+- [ ] Instalar cámara en portería
+- [ ] Instalar cámara en restaurante
+- [ ] Configurar en UniFi Protect (adoptar, zonas, alertas)
+
+- Fecha: 2026-02-02
