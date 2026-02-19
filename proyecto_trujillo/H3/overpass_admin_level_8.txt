@@ -1,0 +1,26 @@
+/*
+Consulta Overpass - Límites administrativos nivel 8
+Área: Bounding box de rutas GTFS Trujillo
+
+Bounding box:
+- min_lat: -8.2240322
+- max_lat: -7.852793
+- min_lon: -79.1232817
+- max_lon: -78.6849698
+
+Ejecutar en: https://overpass-turbo.eu/
+*/
+
+[out:json][timeout:120];
+
+// Buscar relaciones de límites administrativos nivel 8
+// dentro del bounding box de las rutas
+(
+  relation["boundary"="administrative"]["admin_level"="8"]
+    (-8.2240322,-79.1232817,-7.852793,-78.6849698);
+);
+
+// Salida con geometría completa
+out body;
+>;
+out skel qt;
