@@ -34,7 +34,7 @@
 - **Prioridad:** Alta
 
 ### 6. Desactivar Acceso Sebastián Julio
-- [ ] Remover/desactivar accesos de Sebastián Julio
+- [x] Remover/desactivar accesos de Sebastián Julio (**Completada - 2026-02-09**)
 - **Usuario:** Sebastián Julio
 - **Prioridad:** Alta
 - **Acción:** Desactivar
@@ -118,7 +118,7 @@
 | 2 | Acceso Padre Gregorio | **Alta** | Pendiente |
 | 4 | Cámara portería | **Alta** | No funciona |
 | 5 | Acceso Rector Harrison | **Alta** | Pendiente |
-| 6 | Desactivar Sebastián Julio | **Alta** | Pendiente |
+| 6 | Desactivar Sebastián Julio | **Alta** | **Completada** |
 | 7 | Cámara 114 (intermitente) | **Alta** | Monitorear |
 | 1 | Televisor rectoría | Media | Pendiente |
 | 3 | Cámara restaurante escolar | Media | Pendiente |
@@ -156,13 +156,18 @@ Protect → Settings → Users → [Usuario] → Disable/Remove
 ## Mejoras Futuras / Compras Pendientes
 
 ### Powerbank para Laptop ThinkPad L14
-- [ ] **Comprar INIU 25,000mAh 100W** - Powerbank USB-C PD
+- [x] **Comprar INIU 25,000mAh 100W** - Powerbank USB-C PD (**Pedida - 2026-02-09**)
 - **Modelo:** INIU B62 25000mAh 100W
 - **Precio:** ~$50 USD
 - **Link:** [Amazon USA](https://www.amazon.com/INIU-Charging-25000mAh-Ultimate-Compatible/dp/B08VDJP7WN)
 - **Uso:** Cargar laptop ThinkPad L14 (~2 cargas completas) + celulares
 - **Specs:** 3 puertos (2 USB-C 100W/45W + 1 USB-A 18W), pantalla digital
 - **Nota:** Aprobado para aviones (<100Wh)
+
+### Filtros de Agua Potable - Casa
+- [ ] **Pedir filtros de agua potable para la casa**
+- **Prioridad:** Alta
+- **Nota:** Pendiente definir modelo/marca y proveedor
 
 ### Load Balancing / Dual WAN
 - [ ] **Comprar adaptador SFP+ a RJ45** para conectar segunda WAN
@@ -175,4 +180,4 @@ Protect → Settings → Users → [Usuario] → Disable/Remove
 
 ---
 
-*Actualizado: 2026-02-03*
+*Actualizado: 2026-02-09*
