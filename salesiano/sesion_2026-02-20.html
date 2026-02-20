@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Informe de Sesión - 20 de Febrero 2026</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{background:#f8fafc;font-family:'Segoe UI',Arial,sans-serif;color:#1e293b;line-height:1.7}
+        .page{max-width:850px;margin:0 auto;padding:40px 50px;background:#fff;min-height:100vh;box-shadow:0 0 40px rgba(0,0,0,0.08)}
+
+        .header{border-bottom:3px solid #2563eb;padding-bottom:20px;margin-bottom:30px}
+        .header h1{font-size:24px;color:#1e293b;font-weight:800}
+        .header h2{font-size:16px;color:#2563eb;font-weight:600;margin-top:4px}
+        .header .meta{display:flex;justify-content:space-between;margin-top:12px;font-size:13px;color:#64748b}
+
+        .badge{display:inline-block;background:#2563eb;color:#fff;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:600}
+
+        h3{font-size:18px;color:#1e293b;margin:28px 0 12px;padding-bottom:6px;border-bottom:2px solid #e2e8f0}
+        h4{font-size:14px;color:#2563eb;margin:16px 0 8px}
+
+        p{margin-bottom:10px;font-size:14px}
+
+        .students{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:16px 0}
+        .student{background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;padding:10px;text-align:center;font-size:13px}
+        .student .name{font-weight:700;color:#1e293b}
+        .student .role{font-size:11px;color:#64748b;margin-top:2px}
+
+        .activity{background:#f8fafc;border-left:4px solid #2563eb;padding:14px 18px;margin:12px 0;border-radius:0 8px 8px 0}
+        .activity.green{border-left-color:#16a34a}
+        .activity.purple{border-left-color:#9333ea}
+        .activity.orange{border-left-color:#ea580c}
+        .activity.red{border-left-color:#dc2626}
+        .activity h5{font-size:14px;color:#1e293b;margin-bottom:4px}
+        .activity p{font-size:13px;color:#475569;margin-bottom:4px}
+        .activity code{background:#e2e8f0;padding:1px 6px;border-radius:3px;font-size:12px;color:#2563eb}
+
+        .timeline{position:relative;padding-left:24px;margin:16px 0}
+        .timeline::before{content:'';position:absolute;left:8px;top:0;bottom:0;width:2px;background:#e2e8f0}
+        .timeline .step{position:relative;margin-bottom:16px}
+        .timeline .step::before{content:'';position:absolute;left:-20px;top:6px;width:12px;height:12px;border-radius:50%;background:#2563eb;border:2px solid #fff;box-shadow:0 0 0 2px #2563eb}
+        .timeline .step.done::before{background:#16a34a;box-shadow:0 0 0 2px #16a34a}
+        .timeline .step h5{font-size:13px;font-weight:700;color:#1e293b}
+        .timeline .step p{font-size:12px;color:#64748b;margin:2px 0 0}
+
+        .tech-tag{display:inline-block;background:#eff6ff;color:#2563eb;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;margin:2px}
+
+        .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0}
+        .stat-box{background:linear-gradient(135deg,#eff6ff,#f8fafc);border:1px solid #dbeafe;border-radius:10px;padding:14px;text-align:center}
+        .stat-box .num{font-size:28px;font-weight:800;color:#2563eb}
+        .stat-box .label{font-size:11px;color:#64748b;margin-top:2px}
+
+        .devices{margin:12px 0}
+        .devices table{width:100%;border-collapse:collapse;font-size:13px}
+        .devices th{background:#f1f5f9;padding:8px 12px;text-align:left;font-size:12px;color:#64748b;border-bottom:2px solid #e2e8f0}
+        .devices td{padding:8px 12px;border-bottom:1px solid #f1f5f9}
+
+        .conclusions{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:18px;margin:16px 0}
+        .conclusions h4{color:#16a34a;margin-bottom:8px}
+        .conclusions ul{padding-left:20px;font-size:13px;color:#1e293b}
+        .conclusions li{margin-bottom:4px}
+
+        .footer{margin-top:30px;padding-top:16px;border-top:2px solid #e2e8f0;font-size:11px;color:#94a3b8;text-align:center}
+
+        @media print{.page{box-shadow:none;padding:20px 30px}}
+    </style>
+</head>
+<body>
+<div class="page">
+
+    <!-- HEADER -->
+    <div class="header">
+        <h1>Informe de Sesión - Tecnología y Mapeo Colaborativo</h1>
+        <h2>Colegio Salesiano de Duitama</h2>
+        <div class="meta">
+            <div>
+                <strong>Fecha:</strong> Jueves 20 de febrero de 2026<br>
+                <strong>Docente / Facilitador:</strong> Leonardo
+            </div>
+            <div style="text-align:right">
+                <span class="badge">Sesión Práctica</span><br>
+                <strong>Asistentes:</strong> 10 estudiantes
+            </div>
+        </div>
+    </div>
+
+    <!-- ASISTENCIA -->
+    <h3>📋 Asistencia</h3>
+    <div class="students">
+        <div class="student"><div class="name">Milagros (Emily)</div><div class="role">Estudiante</div></div>
+        <div class="student"><div class="name">Ana María</div><div class="role">Estudiante</div></div>
+        <div class="student"><div class="name">Nadia</div><div class="role">Estudiante</div></div>
+        <div class="student"><div class="name">Brayan</div><div class="role">Estudiante</div></div>
+        <div class="student"><div class="name">Cristian</div><div class="role">Estudiante</div></div>
+        <div class="student"><div class="name">Peña</div><div class="role">Estudiante</div></div>
+        <div class="student"><div class="name">Stefanía</div><div class="role">Estudiante</div></div>
+        <div class="student"><div class="name">Yoseph</div><div class="role">Estudiante</div></div>
+        <div class="student"><div class="name">David</div><div class="role">Estudiante - 7.°</div></div>
+        <div class="student"><div class="name">David (2)</div><div class="role">Estudiante - 7.°</div></div>
+    </div>
+
+    <p>Se detectaron <strong>5 dispositivos</strong> conectados a la red local durante la sesión, accediendo a los recursos desde sus equipos del aula.</p>
+
+    <div class="devices">
+        <table>
+            <tr><th>Dispositivo</th><th>IP</th><th>MAC Address</th><th>Estado</th></tr>
+            <tr><td>Equipo 1</td><td>192.168.120.105</td><td>48:9e:bd:47:b9:4a</td><td>✅ Activo</td></tr>
+            <tr><td>Equipo 2</td><td>192.168.120.106</td><td>48:9e:bd:47:ba:00</td><td>✅ Activo (más visitas)</td></tr>
+            <tr><td>Equipo 3</td><td>192.168.120.107</td><td>48:9e:bd:47:b8:a4</td><td>✅ Activo</td></tr>
+            <tr><td>Equipo 4</td><td>192.168.120.108</td><td>48:9e:bd:47:b9:e8</td><td>✅ Activo</td></tr>
+            <tr><td>Equipo 5</td><td>192.168.120.115</td><td>48:9e:bd:47:b8:ed</td><td>⏸️ Intermitente</td></tr>
+        </table>
+    </div>
+
+    <!-- OBJETIVO -->
+    <h3>🎯 Objetivo de la Sesión</h3>
+    <p>Explorar el uso de <strong>datos geográficos abiertos (OpenStreetMap)</strong> para crear aplicaciones web interactivas relacionadas con el entorno local de Duitama, integrando conceptos de cartografía digital, desarrollo web y gamificación como herramientas de aprendizaje.</p>
+
+    <!-- ESTADÍSTICAS -->
+    <h3>📊 Datos de la Sesión</h3>
+    <div class="stats">
+        <div class="stat-box"><div class="num">2,050</div><div class="label">Edificios de OSM usados</div></div>
+        <div class="stat-box"><div class="num">16</div><div class="label">Barrios mapeados</div></div>
+        <div class="stat-box"><div class="num">4</div><div class="label">Aplicaciones creadas</div></div>
+        <div class="stat-box"><div class="num">300+</div><div class="label">Lugares reales de OSM</div></div>
+    </div>
+
+    <!-- ACTIVIDADES DETALLADAS -->
+    <h3>🛠️ Actividades Realizadas</h3>
+
+    <div class="timeline">
+
+        <div class="step done">
+            <h5>1. Mapa Interactivo de Duitama</h5>
+            <p>Se creó una página web con un mapa interactivo usando <strong>Leaflet.js</strong> y tiles de <strong>CartoDB Dark</strong>. Se ubicó el <strong>Colegio Salesiano</strong> con un marcador inicial y el <strong>Centro Comercial Innovo Plaza</strong>.</p>
+            <p><span class="tech-tag">Leaflet.js</span><span class="tech-tag">OpenStreetMap</span><span class="tech-tag">HTML/CSS/JS</span></p>
+        </div>
+
+        <div class="step done">
+            <h5>2. Polígono Real del Colegio Salesiano desde OSM</h5>
+            <p>Se consultó la <strong>API de Nominatim</strong> para obtener el polígono real del Colegio Salesiano (way/422076211 en OpenStreetMap). El predio se dibujó con su forma exacta sobre el mapa, reemplazando el marcador simple por la geometría real del colegio con brillo azul y popup informativo.</p>
+            <p><span class="tech-tag">Nominatim API</span><span class="tech-tag">GeoJSON</span><span class="tech-tag">Polígonos</span></p>
+        </div>
+
+        <div class="step done">
+            <h5>3. Barrios de Duitama con Overpass API</h5>
+            <p>Se utilizó la <strong>Overpass API</strong> para consultar todos los nodos de barrios (<code>place=neighbourhood</code>) en el área de Duitama. Se obtuvieron <strong>16 barrios</strong> con sus coordenadas reales: Salesiano, Centro, El Carmen, Solano, La Tolosa, El Progreso, Siratá, Manzanares, Santander, Colombia, Libertador, Villa Patricia, Santa Rita, Villa Inés, La Gruta y Bella Vista. Cada barrio se representó con un hexágono delimitador y etiqueta de color.</p>
+            <p><span class="tech-tag">Overpass API</span><span class="tech-tag">Datos abiertos</span><span class="tech-tag">16 barrios</span></p>
+        </div>
+
+        <div class="step done">
+            <h5>4. Puntos de Interés y Zona Gaming</h5>
+            <p>Se agregaron marcadores para el <strong>C.C. Innovo Plaza</strong>, puntos de gaming/videojuegos con iconos temáticos (🎮🕹️) y halos luminosos, además de la leyenda interactiva. Se destacó fuertemente el <strong>Barrio Salesiano</strong> con borde brillante y texto grande.</p>
+            <p><span class="tech-tag">Iconos personalizados</span><span class="tech-tag">Tema oscuro</span></p>
+        </div>
+
+        <div class="step done">
+            <h5>5. Servidor Web Local en Red</h5>
+            <p>Se levantó un servidor HTTP en el equipo del docente (<code>192.168.120.2:8080</code>) para que todos los estudiantes pudieran acceder desde sus dispositivos en la misma red LAN. Se migró a un servidor <strong>multihilo</strong> (ThreadingMixIn) para soportar conexiones simultáneas sin bloquearse. Se verificó la conectividad de 5 equipos mediante la tabla ARP.</p>
+            <p><span class="tech-tag">Python HTTP Server</span><span class="tech-tag">Red LAN</span><span class="tech-tag">Multihilo</span></p>
+        </div>
+
+        <div class="step done">
+            <h5>6. Duitama Explorer - Juego Colaborativo</h5>
+            <p>Se desarrolló una aplicación web con <strong>5 modos interactivos</strong>:</p>
+            <ul style="font-size:13px;padding-left:20px;margin:6px 0">
+                <li><strong>Mapa:</strong> Mapa completo con barrios, colegio, POIs y gaming</li>
+                <li><strong>Quiz:</strong> 10 preguntas de geografía local (+10 pts por acierto)</li>
+                <li><strong>Explorar:</strong> Los estudiantes agregan lugares nuevos al mapa haciendo clic (+5 pts)</li>
+                <li><strong>Feed:</strong> Historial de lugares agregados por todos, con sistema de votos</li>
+                <li><strong>Ranking:</strong> Tabla de posiciones de los exploradores más activos</li>
+            </ul>
+            <p>Incluye backend con API REST (<code>/api/puntos</code>, <code>/api/ranking</code>, <code>/api/votar</code>) que almacena los datos en JSON compartido.</p>
+            <p><span class="tech-tag">API REST</span><span class="tech-tag">Gamificación</span><span class="tech-tag">Datos colaborativos</span></p>
+        </div>
+
+        <div class="step done">
+            <h5>7. Duitama Dash - Geometry Dash con datos de OSM</h5>
+            <p>Se creó un clon de <strong>Geometry Dash</strong> que usa <strong>2,050 edificios reales</strong> de OpenStreetMap como obstáculos. Cada edificio conserva sus niveles/pisos reales (1-14 pisos). El juego incluye:</p>
+            <ul style="font-size:13px;padding-left:20px;margin:6px 0">
+                <li><strong>Mini-mapa Leaflet</strong> sincronizado mostrando la posición del jugador en Duitama en tiempo real</li>
+                <li><strong>Ruta temática:</strong> "De la casa al Colegio Salesiano" (Barrio El Carmen → Colegio Salesiano)</li>
+                <li><strong>Letreros reales</strong> de negocios de OSM a lo largo del recorrido (Pizza Nostra, Bomberos, Clínica Tundama, Rockefeller, Alcaldía, Bancolombia, Cafetería Salesiano, Biblioteca Salesiano, etc.)</li>
+                <li><strong>POIs con iconos grandes</strong> (🏫🛍️⛪🏛️🚒👮🏥🛒) y nombres con efecto glow</li>
+                <li><strong>Nombres de barrios</strong> aparecen en pantalla al cruzarlos</li>
+                <li><strong>Portal final</strong> = 🏫 Colegio Salesiano</li>
+                <li>Dificultad progresiva, spikes, bloques con pisos, pilares de edificios altos</li>
+            </ul>
+            <p><span class="tech-tag">Canvas 2D</span><span class="tech-tag">Overpass API</span><span class="tech-tag">2,050 edificios</span><span class="tech-tag">300+ negocios</span></p>
+        </div>
+
+        <div class="step done">
+            <h5>8. Plantas vs Zombies - Duitama Edition</h5>
+            <p>Se desarrolló un clon de <strong>Plants vs Zombies</strong> con temática local:</p>
+            <ul style="font-size:13px;padding-left:20px;margin:6px 0">
+                <li><strong>6 plantas:</strong> Girasol (🌻), Tirador (🌿), Nuez (🥜), Hielo (❄️), Chile explosivo (🌶️), Doble Tirador (🌱)</li>
+                <li><strong>5 tipos de zombies:</strong> Normal, Conehead, Buckethead, Corredor, Gigante (jefe)</li>
+                <li><strong>3 mapas de Duitama:</strong> Barrio Salesiano (verde), Plaza Innovo (morado), Parque Los Libertadores (azul)</li>
+                <li>8 oleadas por mapa, economía de soles, cortadoras de césped de emergencia, congelamiento</li>
+                <li>Colores vibrantes con tema neón oscuro</li>
+            </ul>
+            <p><span class="tech-tag">Canvas 2D</span><span class="tech-tag">Tower Defense</span><span class="tech-tag">Gamificación</span></p>
+        </div>
+
+    </div>
+
+    <!-- TECNOLOGÍAS -->
+    <h3>💻 Tecnologías y Herramientas Utilizadas</h3>
+    <div class="activity">
+        <h5>Frontend</h5>
+        <p>HTML5, CSS3, JavaScript (ES6+), Canvas 2D, Leaflet.js</p>
+    </div>
+    <div class="activity green">
+        <h5>Datos Geográficos</h5>
+        <p>OpenStreetMap, Nominatim API (geocodificación), Overpass API (consultas de datos), GeoJSON, Tiles CartoDB Dark</p>
+    </div>
+    <div class="activity purple">
+        <h5>Backend y Red</h5>
+        <p>Python 3 (HTTPServer con ThreadingMixIn), API REST (JSON), servidor multihilo en LAN (192.168.120.2:8080)</p>
+    </div>
+    <div class="activity orange">
+        <h5>Herramientas de Desarrollo</h5>
+        <p>Claude Code (asistente IA de Anthropic) como herramienta de codificación en tiempo real, terminal Linux, curl, ARP para diagnóstico de red</p>
+    </div>
+
+    <!-- DATOS USADOS -->
+    <h3>🗺️ Datos de OpenStreetMap Utilizados</h3>
+    <div class="activity">
+        <h5>Colegio Salesiano de Duitama</h5>
+        <p>Polígono real: <code>way/422076211</code> — 26 puntos de coordenadas, dirección Avenida Circunvalar, Barrio Salesiano. Incluye nodos de la Cafetería de Estudiantes (<code>node/9935875078</code>) y Biblioteca (<code>node/9935875077</code>).</p>
+    </div>
+    <div class="activity green">
+        <h5>Edificios del Centro de Duitama</h5>
+        <p><strong>2,050 edificios</strong> con datos de pisos (1 a 14 niveles), extraídos del área 5.830°N–5.835°N, 73.037°W–73.032°W. Incluyen Innovo Plaza (5 pisos, 139×135m), Parroquia San Juan Bosco, Droguería Pinto, Café Leyenda, entre otros.</p>
+    </div>
+    <div class="activity purple">
+        <h5>Barrios (16 nodos)</h5>
+        <p>Salesiano, Centro, El Carmen, Solano, La Tolosa, El Progreso, Siratá, Manzanares, Santander, Colombia, Libertador, Villa Patricia, Santa Rita, Villa Inés, La Gruta, Bella Vista.</p>
+    </div>
+    <div class="activity orange">
+        <h5>Puntos de Interés (300+)</h5>
+        <p>Negocios, restaurantes, bancos, farmacias, colegios, iglesias, heladerías y más, extraídos de OSM con tags <code>shop</code> y <code>amenity</code> en el área central de Duitama.</p>
+    </div>
+
+    <!-- URLs -->
+    <h3>🔗 Recursos Generados (Red Local)</h3>
+    <div class="activity">
+        <p><strong>Mapa Interactivo:</strong> <code>http://192.168.120.2:8080/mapa_duitama.html</code></p>
+        <p><strong>Duitama Explorer (juego colaborativo):</strong> <code>http://192.168.120.2:8080/</code></p>
+        <p><strong>Duitama Dash (Geometry Dash OSM):</strong> <code>http://192.168.120.2:8080/dash.html</code></p>
+        <p><strong>Plantas vs Zombies:</strong> <code>http://192.168.120.2:8080/pvz.html</code></p>
+    </div>
+
+    <!-- CONCLUSIONES -->
+    <h3>✅ Logros y Conclusiones</h3>
+    <div class="conclusions">
+        <h4>Logros de la sesión</h4>
+        <ul>
+            <li>Los estudiantes interactuaron con datos geográficos reales de su propia ciudad a través de herramientas digitales.</li>
+            <li>Se demostró el potencial de los <strong>datos abiertos de OpenStreetMap</strong> para crear aplicaciones educativas y lúdicas.</li>
+            <li>Se logró que <strong>5 dispositivos del aula</strong> se conectaran simultáneamente al servidor local para explorar el mapa.</li>
+            <li>La gamificación (quiz, sistema de puntos, ranking) generó motivación e interacción entre los estudiantes.</li>
+            <li>Se integraron <strong>2,050 edificios reales y 300+ negocios</strong> de Duitama en un videojuego jugable.</li>
+            <li>Los estudiantes pudieron reconocer lugares de su cotidianidad (Colegio Salesiano, Innovo Plaza, barrios) representados en tecnología web.</li>
+            <li>Se exploró el uso de <strong>inteligencia artificial (Claude Code)</strong> como herramienta de productividad para desarrollo web en tiempo real.</li>
+        </ul>
+    </div>
+
+    <h3>📝 Observaciones</h3>
+    <p>El servidor se cayó en dos ocasiones debido al manejo de un solo hilo de ejecución. Se resolvió migrando a un servidor <strong>multihilo</strong> con <code>ThreadingMixIn</code>. Los barrios de Duitama en OpenStreetMap solo cuentan con nodos centrales (puntos), no con polígonos de límites administrativos, lo cual representa una oportunidad de contribución futura a OSM.</p>
+    <p>El Geometry Dash presentó inicialmente problemas porque el filtro de edificios era demasiado restrictivo (filtro de latitud de 0.003°) y la mayoría de los edificios quedaban fuera del rango de la ruta. Se corrigió ampliando el filtro geográfico.</p>
+    <p>Los estudiantes mostraron especial interés en el juego tipo Geometry Dash y en el Plants vs Zombies, lo cual sugiere que la gamificación es una vía efectiva para acercarlos al trabajo con datos geográficos y desarrollo web.</p>
+
+    <!-- FOOTER -->
+    <div class="footer">
+        <p>Documento generado con apoyo de <strong>Claude Code</strong> (Anthropic) — Modelo Claude Opus 4.6</p>
+        <p>Colegio Salesiano de Duitama &bull; Boyacá, Colombia &bull; 20 de febrero de 2026</p>
+    </div>
+
+</div>
+</body>
+</html>
