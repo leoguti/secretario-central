@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa de Duitama - Club Deportivo Salesiano</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; }
+        #header {
+            background: linear-gradient(135deg, #1a237e, #0d47a1);
+            color: white;
+            padding: 15px 25px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        #header h1 { font-size: 1.4em; }
+        #header span { font-size: 0.9em; opacity: 0.8; }
+        #map { height: calc(100vh - 60px); width: 100%; }
+        .custom-popup h3 { color: #1a237e; margin-bottom: 5px; }
+        .custom-popup p { color: #333; font-size: 0.9em; }
+        .custom-popup .tag {
+            display: inline-block;
+            background: #e3f2fd;
+            color: #1565c0;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.8em;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="header">
+        <h1>Mapa de Duitama - OpenStreetMap + Vibe Coding</h1>
+        <span>Club Deportivo Salesiano 2026</span>
+    </div>
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        const map = L.map('map').setView([5.8268, -73.0333], 15);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors | Hecho con Vibe Coding'
+        }).addTo(map);
+
+        const lugares = [
+            {
+                lat: 5.8288,
+                lng: -73.0348,
+                nombre: "Colegio Salesiano",
+                desc: "Nuestra base de operaciones",
+                tag: "Escuela OSM + Vibe Coding"
+            },
+            {
+                lat: 5.8271,
+                lng: -73.0330,
+                nombre: "Plaza de los Libertadores",
+                desc: "Centro de Duitama",
+                tag: "Por mapear"
+            },
+            {
+                lat: 5.8250,
+                lng: -73.0370,
+                nombre: "Terminal de Transporte",
+                desc: "Conexiones de transporte de Duitama",
+                tag: "Transporte"
+            },
+            {
+                lat: 5.8310,
+                lng: -73.0295,
+                nombre: "Parque de la Milagrosa",
+                desc: "Espacio recreativo",
+                tag: "Por mapear"
+            }
+        ];
+
+        const iconColegio = L.divIcon({
+            html: '<div style="background:#1a237e;color:white;border-radius:50%;width:35px;height:35px;display:flex;align-items:center;justify-content:center;font-size:18px;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3);">🎓</div>',
+            iconSize: [35, 35],
+            className: ''
+        });
+
+        const iconLugar = L.divIcon({
+            html: '<div style="background:#e65100;color:white;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:14px;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3);">📍</div>',
+            iconSize: [30, 30],
+            className: ''
+        });
+
+        lugares.forEach((lugar, i) => {
+            const icon = i === 0 ? iconColegio : iconLugar;
+            L.marker([lugar.lat, lugar.lng], { icon })
+                .addTo(map)
+                .bindPopup(`
+                    <div class="custom-popup">
+                        <h3>${lugar.nombre}</h3>
+                        <p>${lugar.desc}</p>
+                        <span class="tag">${lugar.tag}</span>
+                    </div>
+                `);
+        });
+
+        // Abrir popup del colegio automáticamente
+        setTimeout(() => {
+            map.eachLayer(layer => {
+                if (layer.getLatLng && layer.getLatLng().lat === 5.8288) {
+                    layer.openPopup();
+                }
+            });
+        }, 500);
+    </script>
+</body>
+</html>
